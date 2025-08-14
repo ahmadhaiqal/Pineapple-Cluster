@@ -1,5 +1,5 @@
 {
-  "image": "mcr.microsoft.com/devcontainer/base:debian",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
   "features": {
     "ghr.io/devcontainers-contrib/features/neovim-homebrew:1": {}
   },
@@ -11,5 +11,11 @@
         "path": "/usr/bin/zsh"
       }
     }
-  }
+  },
+  "remoteEnv": {
+    "LANG": "en_US.UTF-8"
+  },
+  "forwardPorts": [
+    8000
+  ]
 }
