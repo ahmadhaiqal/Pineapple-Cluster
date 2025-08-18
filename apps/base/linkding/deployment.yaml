@@ -10,7 +10,7 @@ spec:
   template:
     metadata:
       lables:
-        apps: linkding
+        app: linkding
     spec:
       containers:
         - name: linkding
