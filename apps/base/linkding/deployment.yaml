@@ -9,7 +9,7 @@ spec:
       app: linkding
   template:
     metadata:
-      lables:
+      labels:
         app: linkding
     spec:
       containers:
