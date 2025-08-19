@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: linkding-data-pvc
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
-  storageClassName: ""
   resources:
     requests:
       storage: 1Gi
