@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: linkding-data-pvc
 spec:
-  storageClassName: ""
+  storageClassName: "local-path"
   accessModes:
     - ReadWriteOnce
   resources:
