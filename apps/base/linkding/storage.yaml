@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: linkding-data-pvc
 spec:
-  storageClassName: "ceph-block"
+  storageClassName: "longhorn"
   accessModes:
     - ReadWriteOnce
   resources:
