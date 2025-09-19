@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
   - traefik.yaml
   - metallb.yaml
-  - ipaddresspool.ymal
+  - ipaddresspool.yaml
