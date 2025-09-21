@@ -17,3 +17,4 @@ spec:
     - default-pool
   interfaces:
     - eno1
+    - enp1s0
