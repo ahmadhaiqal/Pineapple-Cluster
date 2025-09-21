@@ -6,7 +6,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: ls.amdhql.org
+    - host: lds.amdhql.org
       http:
         paths:
           - backend:
