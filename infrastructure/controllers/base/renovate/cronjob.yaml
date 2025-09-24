@@ -14,7 +14,7 @@ spec:
             - name: renovate
               image: renovate/renovate:latest
               args:
-                - amdhql/Pineapple-Cluster
+                - ahmadhaiqal/Pineapple-Cluster
 
               envFrom:
                 - secretRef:
