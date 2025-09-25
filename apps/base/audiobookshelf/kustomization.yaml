@@ -5,4 +5,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - storage.yaml
+  - configmap.yaml
   # - linkding-container-env-secret.yaml
