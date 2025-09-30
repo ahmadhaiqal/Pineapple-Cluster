@@ -31,7 +31,7 @@ spec:
     name: flux-system
   path: ./infrastructure/controllers/staging
   prune: true
-  # decryption:
-  #   provider: sops
-  #   secretRef:
-  #     name: sops-age
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
