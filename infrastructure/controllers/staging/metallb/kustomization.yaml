@@ -3,3 +3,5 @@ kind: Kustomization
 namespace: metallb-system
 resources:
   - ../../base/metallb/
+  - IPAddress.yaml
+  - L2Advertisement.yaml
