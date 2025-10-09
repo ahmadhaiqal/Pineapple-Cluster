@@ -13,4 +13,4 @@ spec:
         kind: HelmRepository
         name: cnpg
         namespace: cnpg-system
-      inverval: 12h
+      interval: 12h
