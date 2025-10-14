@@ -18,12 +18,12 @@ spec:
   storage:
     size: 3Gi
 
-  bootstrap:
-    initdb:
-      database: commafeed
-      owner: commafeed
-      secret:
-        name: commafeed-db-creds
+  # bootstrap:
+  #   initdb:
+  #     database: commafeed
+  #     owner: commafeed
+  #     secret:
+  #       name: commafeed-db-creds
 
   # handy: resources can be used to trigger a redeploy
   resources:
