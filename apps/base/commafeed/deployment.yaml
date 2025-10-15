@@ -19,8 +19,8 @@ spec:
 
       containers:
         - name: commafeed
-          image: athou/commafeed:latest-h2
-          # image: athou/commafeed:latest-postgresql
+          # image: athou/commafeed:latest-h2
+          image: athou/commafeed:latest-postgresql
           ports:
             - containerPort: 8082
               protocal: TCP
