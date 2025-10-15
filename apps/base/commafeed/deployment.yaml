@@ -28,7 +28,7 @@ spec:
             allowPrivilegeEscalation: false
 
           envFrom:
-            - configMap:
+            - configMapRef:
                 name: commafeed-configmap
             - secretRef:
                 name: commafeed-container-env
