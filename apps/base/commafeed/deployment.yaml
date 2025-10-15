@@ -28,11 +28,13 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 
-          # envFrom:
-          #   # - configMapRef:
-          #   #     name: commafeed-configmap
-          #   - secretRef:
-          #       name: commafeed-container-env
+          envFrom:
+            #   # - configMapRef:
+            #   #     name: commafeed-configmap
+            #   - secretRef:
+            #       name: commafeed-container-env
+            - secretRef:
+                name: test-secret
 
           volumeMounts:
             - name: commafeed-data
