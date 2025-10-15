@@ -13,9 +13,9 @@ spec:
         app: commafeed
     spec:
       securityContext:
-        fsGroup: 33
-        runAsUser: 33
-        runAsGroup: 33
+        fsGroup: 2000
+        runAsUser: 1000
+        runAsGroup: 3000
 
       containers:
         - name: commafeed
@@ -27,13 +27,19 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 
-          volumeMounts:
-            - name: commafeed-data
-              mountPath: /commafeed/data
+          envFrom:
+            - configMap:
+                name: commafeed-configmap
+            - secretRef:
+                name: commafeed-container-env
+
+          # volumeMounts:
+          #   - name: commafeed-data
+          #     mountPath: /commafeed/data
 
       restartpolicy: Alyways
 
-      volumes:
-        - name: commafeed-data
-          persistentVolumeClaim:
-            claimName: commafeed-data
+      # volumes:
+      #   - name: commafeed-data
+      #     persistentVolumeClaim:
+      #       claimName: commafeed-data
