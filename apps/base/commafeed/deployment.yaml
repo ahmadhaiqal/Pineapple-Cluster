@@ -19,7 +19,8 @@ spec:
 
       containers:
         - name: commafeed
-          image: athou/commafeed:latest-postgresql
+          image: athou/commafeed:latest-h2
+          # image: athou/commafeed:latest-postgresql
           ports:
             - containerPort: 8082
               protocal: TCP
@@ -33,13 +34,13 @@ spec:
             - secretRef:
                 name: commafeed-container-env
 
-          # volumeMounts:
-          #   - name: commafeed-data
-          #     mountPath: /commafeed/data
+          volumeMounts:
+            - name: commafeed-data
+              mountPath: /commafeed/data
 
       restartpolicy: Alyways
 
-      # volumes:
-      #   - name: commafeed-data
-      #     persistentVolumeClaim:
-      #       claimName: commafeed-data
+      volumes:
+        - name: commafeed-data
+          persistentVolumeClaim:
+            claimName: commafeed-data
