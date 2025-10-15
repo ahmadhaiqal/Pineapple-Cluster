@@ -1,7 +1,0 @@
-apiVersion: v1
-data:
-  password001: dGVzdFBhc3M=
-  username0001: dGVzdHVzZXI=
-kind: Secret
-metadata:
-  name: test-secret
