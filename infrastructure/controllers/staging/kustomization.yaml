@@ -4,3 +4,4 @@ resources:
   - renovate
   - metallb
   - cloudnativepg
+  - traefik
