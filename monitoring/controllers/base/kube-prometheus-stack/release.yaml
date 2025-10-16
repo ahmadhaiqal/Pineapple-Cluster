@@ -27,12 +27,12 @@ spec:
   values:
     grafana:
       adminPassword: amdhql
-      # ingress:
-      #   enabled: true
-      #   ingressClassName: traefik
-      #   hosts:
-      #     - grafana.amdhql.org
-      #   tls:
-      #     - secretName: grafana-tls-secret
-      #       hosts:
-      #         - grafana.amdhql.org
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - grafana.amdhql.org
+        tls:
+          - secretName: grafana-tls-secret
+            hosts:
+              - grafana.amdhql.org
