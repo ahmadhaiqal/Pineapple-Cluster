@@ -21,4 +21,3 @@ spec:
     ingressClass:
       enabled: true
       isDefaultClass: true
-      create: true
