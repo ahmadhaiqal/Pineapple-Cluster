@@ -3,6 +3,6 @@ kind: Kustomization
 namespace: komga
 resources:
   - ../../base/komga
-  # - cloudflare.yaml
-  # - cloudflare-secret.yaml
+  - cloudflare.yaml
+  - cloudflare-secret.yaml
   #- ingress.yaml
