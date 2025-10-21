@@ -23,6 +23,10 @@ spec:
           ports:
             - containerPort: 4567
 
+          envFrom:
+            - configMapRef:
+                name: suwayomi-configmap
+
           securityContext:
             allowPrivilegeEscalation: false
 

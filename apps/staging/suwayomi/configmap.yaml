@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: suwayumi-configmap
+data:
+  TZ: "Etc/UTC"
+  FLARESOLVERR_ENABLED: "true"
+  FLARESOLVERR_URL: "http://flarasolverr:8191"

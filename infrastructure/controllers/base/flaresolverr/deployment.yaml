@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaresolverr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flaresolverr
+  template:
+    metadata:
+      labels:
+        app: flaresolverr
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+
+      containers:
+        - name: flaresolverr
+          image: ghcr.io/thephaseless/byparr:latest
+          ports:
+            - containerPort: 8191
+              protocal: TCP
+
+          envFrom:
+            - configMapRef:
+                name: flaresolverr-configmap
+          securityContext:
+            allowPrivilegeEscalation: false
+
+      restartpolicy: Alyways
