@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: suwayomi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: suwayomi
+  template:
+    metadata:
+      labels:
+        app: suwayomi
+    spec:
+      securityContext:
+        fsGroup: 1000 # www-data group ID
+        runAsUser: 1000 # www-data group ID
+        runAsGroup: 1000 # www-data group ID
+
+      containers:
+        - name: suwayomi
+          image: ghcr.io/suwayomi/suwayomi-server:v2.1.1930
+          ports:
+            - containerPort: 4567
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          volumeMounts:
+            - name: suwayomi-files
+              mountPath: /home/suwayomi/.local/share/Tachidesk
+            - name: suwayomi-downloads
+              mountPath: /home/suwayomi/.local/share/Tachidesk/downloads
+      volumes:
+        - name: suwayomi-files
+          persistentVolumeClaim:
+            claimName: suwayomi-files-pvc
+        - name: suwayomi-downloads
+          persistentVolumeClaim:
+            claimName: suwayomi-downloads-pvc
