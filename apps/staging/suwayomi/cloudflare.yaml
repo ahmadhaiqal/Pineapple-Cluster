@@ -68,7 +68,7 @@ data:
   config.yaml: |
     # Name of the tunnel you want to run
 
-    tunnel: komga
+    tunnel: manga
 
     credentials-file: /etc/cloudflared/creds/credentials.json
 
@@ -77,7 +77,7 @@ data:
     no-autoupdate: true
 
     ingress:
-    - hostname: komga.amdhql.org
+    - hostname: manga.amdhql.org
       service: http://suwayomi:4567
 
 
