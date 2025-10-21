@@ -78,7 +78,7 @@ data:
 
     ingress:
     - hostname: komga.amdhql.org
-      service: http://komga:4567
+      service: http://suwayomi:4567
 
 
     # This rule sends traffic to the built-in hello-world HTTP server. This can help debug connectivity
