@@ -29,7 +29,7 @@ spec:
       adminPassword: amdhql
       ingress:
         enabled: true
-        ingressClassName: traefik
+        ingressClassName: cilium
         hosts:
           - grafana.amdhql.org
         tls:
