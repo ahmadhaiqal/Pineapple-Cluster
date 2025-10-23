@@ -27,12 +27,18 @@ spec:
   values:
     grafana:
       adminPassword: amdhql
+      service:
+        type: LoadBalancer
+        annotations:
+          io.cilium/lb-ipam-ips: "192.168.1.240" # pick a free IP in your subnet
+        labels:
+          cilium-lb-pool: pineapple-pool
       ingress:
-        enabled: true
-        ingressClassName: cilium
-        hosts:
-          - grafana.amdhql.org
-        tls:
-          - secretName: grafana-tls-secret
-            hosts:
-              - grafana.amdhql.org
+        enabled: false
+        # ingressClassName: cilium
+        # hosts:
+        #   - grafana.amdhql.org
+        # tls:
+        #   - secretName: grafana-tls-secret
+        #     hosts:
+        #       - grafana.amdhql.org
