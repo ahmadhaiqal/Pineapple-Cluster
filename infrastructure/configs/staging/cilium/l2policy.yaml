@@ -1,0 +1,11 @@
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: pineapple-policy
+  namespace: kube-system
+spec:
+  serviceSelector:
+    matchLabels:
+      cilium-lb-pool: pineapple-pool
+
+  loadBalancerIPs: true
