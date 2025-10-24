@@ -29,14 +29,14 @@ spec:
       adminPassword: amdhql
       service:
         type: LoadBalancer
-        labels:
-          cilium-lb-pool: pineapple-pool
+        # labels:
+        #   cilium-lb-pool: pineapple-pool
       ingress:
-        enabled: false
-        # ingressClassName: cilium
-        # hosts:
-        #   - grafana.amdhql.org
-        # tls:
-        #   - secretName: grafana-tls-secret
-        #     hosts:
-        #       - grafana.amdhql.org
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - grafana.amdhql.org
+        tls:
+          - secretName: grafana-tls-secret
+            hosts:
+              - grafana.amdhql.org
