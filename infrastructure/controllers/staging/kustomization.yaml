@@ -4,5 +4,5 @@ resources:
   - renovate
   # - metallb
   - cloudnativepg
-  # - traefik
+  - traefik
   - flaresolverr
