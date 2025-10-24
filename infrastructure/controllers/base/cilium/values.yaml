@@ -40,7 +40,7 @@ hubble:
         omni-kube-service-exposer.sidero.dev/port: "5000"
         omni-kube-service-exposer.Sidero.dev/label: Hubble
 
-l2annoucements:
+l2announcements:
   enabled: true
 
 k8sClientRateLimit:
