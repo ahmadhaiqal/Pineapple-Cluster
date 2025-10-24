@@ -4,6 +4,8 @@ metadata:
   name: pineapple-policy
   namespace: kube-system
 spec:
+  interfaces:
+    - "eno1"
   serviceSelector:
     matchLabels:
       cilium-lb-pool: pineapple-pool
