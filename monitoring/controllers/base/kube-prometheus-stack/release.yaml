@@ -28,9 +28,7 @@ spec:
     grafana:
       adminPassword: amdhql
       service:
-        type: LoadBalancer
-        # labels:
-        #   cilium-lb-pool: pineapple-pool
+        type: ClusterIP
       ingress:
         enabled: true
         ingressClassName: traefik
