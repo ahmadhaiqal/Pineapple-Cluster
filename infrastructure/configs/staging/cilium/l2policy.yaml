@@ -5,7 +5,8 @@ metadata:
   namespace: kube-system
 spec:
   interfaces:
-    - "eno1"
+    - eno1
+    - enp1s0
   serviceSelector:
     matchLabels:
       cilium-lb-pool: pineapple-pool
