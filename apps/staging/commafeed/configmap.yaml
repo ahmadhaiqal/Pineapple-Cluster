@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: commafeed-configmap
 data:
-  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://commafeed-db-production-cnpg-v1-rw.commafeed.svc.cluster.local:5432/commafeed"
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://commafeed-db.amdhql.org:5432/commafeed"
   QUARKUS_DATASOURCE_DB_KIND: postgresql

@@ -2,6 +2,10 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: commafeed-db-production-cnpg-v1
+  labels:
+    cilium-lb-pool: pineapple-pool
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: commafeed-db.amdhql.org
 spec:
   description: Postgres cluster for the commafeed application
   imageName: quay.io/enterprisedb/postgresql:16.1
