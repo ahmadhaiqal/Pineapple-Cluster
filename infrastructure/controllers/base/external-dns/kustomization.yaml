@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: external-dns
 resources:
   - namespace.yaml
-  - secret.yaml
+  - secrets.yaml
   - release.yaml
   - repository.yaml
 
