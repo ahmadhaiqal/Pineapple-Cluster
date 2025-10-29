@@ -13,5 +13,5 @@ spec:
     - port: 5432
       targetPort: 5432
   selector:
-    cnpg.io/cluster: commafeed-db
+    cnpg.io/cluster: commafeed-db-production-cnpg-v1
     role: primary
