@@ -1,0 +1,31 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: suwayomi-db-production-cnpg-v1
+spec:
+  description: Postgres cluster for the suwayomi application
+  imageName: quay.io/enterprisedb/postgresql:16.1
+  instances: 3
+
+  monitoring:
+    enablePodMonitor: true
+
+  inheritedMetadata:
+    labels:
+      app: suwayomi-database
+      policy-type: "database"
+
+  storage:
+    size: 2Gi
+
+  bootstrap:
+    initdb:
+      database: suwayomi
+      owner: suwayomi
+      secret:
+        name: suwayomi-db-creds
+
+  # handy: resources can be used to trigger a redeploy
+  resources:
+    requests:
+      memory: 600Mi

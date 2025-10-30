@@ -6,4 +6,4 @@ metadata:
 data:
   TZ: "Etc/UTC"
   FLARESOLVERR_ENABLED: "true"
-  FLARESOLVERR_URL: "http://flarasolverr:8191"
+  FLARESOLVERR_URL: "http://flaresolverr.amdhql.org:8191"
