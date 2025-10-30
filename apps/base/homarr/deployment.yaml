@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homarr
+  template:
+    metadata:
+      labels:
+        app: homarr
+    spec:
+      # securityContext:
+      #   fsGroup: 1000
+      #   runAsUser: 1000
+      #   runAsGroup: 1000
+
+      containers:
+        - name: homarr
+          image: ghcr.io/homarr-labs/homarr:v1.43.0
+          ports:
+            - containerPort: 3005
+              protocal: TCP
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          volumeMounts:
+            - name: homarr-appdata
+              mountPath: /appdata
+
+      restartpolicy: Alyways
+
+      volumes:
+        - name: homarr-appdata
+          persistentVolumeClaim:
+            claimName: homarr-appdata
