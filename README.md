@@ -1,66 +1,97 @@
-# 🍍 Pineapple Cluster
-**Features • Get Started • Documentation**
+# 🍍 Pineapple-Cluster — Kubernetes Cluster (Sidero Omni + FluxCD)
 
-📖 About This Project
-This project uses **Infrastructure as Code** and **GitOps** principles to automate provisioning, operating, and updating self-hosted services in my homelab.  
-It serves as a **customizable framework** for building your own homelab environment.
-
----
-
-### ❓ What is a Homelab?
-A **homelab** is a personal environment where you can:
-- Self-host applications
-- Experiment with new technologies
-- Practice for certifications
-- Learn automation and cloud-native tools  
-
-For more info, check out [r/homelab](https://wwwr/homelab/ and the https://discord.gg/home-operations.
+> **👤 Owner:** Ahmad Haiqal Abd Halim  
+> **📛 Cluster Name:** `Pineapple-Cluster`  
+> **🔗 GitOps:** FluxCD + Renovate  
+> **🖥 Infra Control Plane:** Sidero Omni (Talos OS)  
+> **📍 Location:** Pekan Nenas Lab  
+> **✅ Status:** Active
 
 ---
 
-## 🖥 Hardware
-- **2 × Mini PCs**:
-  - CPU: Intel Core i5
-  - RAM: 16GB
-  - SSD: 256GB
----
+## 🌟 Overview
 
-## ✨ Features
-- Common apps: ___, ____, ______
-- Automated Kubernetes installation and management
-- GitOps-based app deployment with FluxCD
-- Rolling upgrades for OS and Kubernetes
-- Automated certificate management
-- DNS updates for exposed services
-- Secure exposure via Cloudflare Tunnel
-- CI/CD platform
-- Distributed storage
-- Monitoring and alerting with Grafana + Prometheus
-- Automated backup and restore
-- Infrastructure testing
+This repository is the **source of truth** for the **Pineapple-Cluster** Kubernetes cluster, managed via **GitOps** using **FluxCD** and provisioned by **Sidero Omni**. It includes cluster manifests, platform services, and application workloads.
+
+### ✨ Key Features
+- ✅ Declarative cluster configuration
+- 🔄 GitOps-driven updates with FluxCD
+- 🤖 Automated dependency updates via Renovate
+- 🔐 Secure secrets management with SOPS + Age
+- 📊 Observability stack (Prometheus + Grafana)
+- 🌐 Networking powered by **Cilium**
+- 🚪 Ingress via **Traefik** with **Cloudflare DNS solver**
+- 💾 Persistent storage via **Longhorn**
 
 ---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart LR
+    A[GitHub Repo] -- GitOps --> B[FluxCD]
+    B -- Applies --> C[Cluster Manifests]
+    D[Sidero Omni] -- Provisions --> E[Talos Nodes]
+    E -- Joins --> F[(Pineapple-Cluster)]
+    subgraph Nodes
+      E1[hippo-lab<br/>Control Plane<br/>4c/8GiB/256GB]
+      E2[urial-lab<br/>Worker<br/>4c/16GiB/1039GB]
+    end
+```
+
+---
+
+## 🖥 Machines
+
+| 🏷 Hostname    | 🎭 Role          | ⚙️ CPU | 🧠 Memory | 💾 Storage | 🌐 Network | 🏗 Arch  |
+|---------------|-----------------|-------|----------|-----------|-----------|---------|
+| `hippo-lab`  | Control Plane   | 4     | 8GiB     | 256GB     | 1Gbps     | amd64   |
+| `urial-lab`  | Worker          | 4     | 16GiB    | 1039GB    | 1Gbps     | amd64   |
+
 ---
 
 ## 🛠 Tech Stack
-| Logo | Name | Description |
-|------|------|-------------|
-| Kubernates | Kuberneteschestration backbone |
-| ArgoCD | GitOps tool for Kubernetes |
-| Helm | Kubernetes package manager |
-| Tailscale | VPN without port forwarding |
-| Wireguard | Secure VPN tunnel |
-| Grafana | Observability dashboard |
-| Prometheus | Monitoring and alerting |
-| Gitea | Self-hosted Git service |
-| cert-manager | Certificate management |
-| Cloudflare | DNS and secure tunnels |
+
+- 🌐 **Networking:** Cilium  
+- 🚪 **Ingress:** Traefik  
+- 🔐 **DNS & Certs:** cert-manager + Cloudflare DNS solver  
+- 💾 **Storage:** Longhorn  
+- 🔑 **Secrets:** SOPS with Age  
+- 📊 **Observability:** Prometheus + Grafana  
+- 🔄 **GitOps:** FluxCD  
+- 🤖 **Update Automation:** Renovate  
+- 🖥 **Node OS:** Talos (via Sidero Omni)  
 
 ---
 
-## 🚀 Get Started
-- Try it locally with minimal hardware
-- Deploy on real hardware for production workloads  
-*(Detailed instructions coming soon)*
+## 📦 Helm Repositories (Pinned)
 
-rnetes` `gitops` `homelab` `tailscale` `cloudflare` `argocd` `self-hosting`
+- 🐋 `cilium`
+- 🐘 `cloudnativepg`
+- 🌍 `external-dns`
+- 🔍 `flaresolverrr`
+- 🚦 `traefik`
+- 🤖 `renovate`
+- 📊 `kube-prometheus-stack`
+
+---
+
+
+## 📊 Observability
+
+- ✅ Prometheus Operator via `kube-prometheus-stack`
+- 📈 Dashboards in Grafana
+- 🔔 Alerting via Alertmanager
+
+---
+
+## ⚙️ CI/CD
+
+- 🔄 FluxCD for reconciliation
+- 🤖 Renovate for dependency updates
+
+---
+
+## 📜 License
+
+`Apache-2.0`
