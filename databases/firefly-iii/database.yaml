@@ -1,0 +1,31 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: firefly-iii-db-production-cnpg-v1
+spec:
+  description: Postgres cluster for the firefly-iii application
+  imageName: quay.io/enterprisedb/postgresql:16.1
+  instances: 2
+
+  monitoring:
+    enablePodMonitor: true
+
+  inheritedMetadata:
+    labels:
+      app: firefly-iii-database
+      policy-type: "database"
+
+  storage:
+    size: 3Gi
+
+  bootstrap:
+    initdb:
+      database: firefly-iii
+      owner: firefly-iii
+      secret:
+        name: firefly-iii-db-creds
+
+  # handy: resources can be used to trigger a redeploy
+  resources:
+    requests:
+      memory: 600Mi

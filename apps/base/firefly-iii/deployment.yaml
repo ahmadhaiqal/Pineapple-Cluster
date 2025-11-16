@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly-iii
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: firefly-iii
+  template:
+    metadata:
+      labels:
+        app: firefly-iii
+    spec:
+      # securityContext:
+      #   fsGroup: 33
+      #   runAsUser: 33
+      #   runAsGroup: 33
+
+      containers:
+        - name: firefly-iii
+          image: fireflyiii/core:version-6.4.8
+          ports:
+            - containerPort: 8082
+              protocal: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+
+      
+          volumeMounts:
+            - name: firefly-iii-upload
+              mountPath: /var/www/html/storage/upload
+
+          envFrom:
+            - configMapRef:
+                name: firefly-iii-configmap
+            - secretRef:
+                name: firefly-iii-container-env
+          # DB_PASSWORD=pgsql
+          # DB_CONNECTION=pgsql
+          # DB_HOST=db
+          # DB_PORT=5432
+
+      restartpolicy: Alyways
+
+      volumes:
+        - name: firefly-iii-upload
+          persistentVolumeClaim:
+            claimName: firefly-iii-upload-pvc
