@@ -5,4 +5,4 @@ metadata:
 data:
   DB_HOST: "jdbc:postgresql://firefly-iii-db.amdhql.org:5432/firefly-iii"
   DB_PORT: "5432"
-  DB_CONNECTIO: pgsql
+  DB_CONNECTION: pgsql
