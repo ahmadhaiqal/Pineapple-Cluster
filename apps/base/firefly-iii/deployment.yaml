@@ -26,7 +26,6 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 
-      
           volumeMounts:
             - name: firefly-iii-upload
               mountPath: /var/www/html/storage/upload
@@ -36,10 +35,6 @@ spec:
                 name: firefly-iii-configmap
             - secretRef:
                 name: firefly-iii-container-env
-          # DB_PASSWORD=pgsql
-          # DB_CONNECTION=pgsql
-          # DB_HOST=db
-          # DB_PORT=5432
 
       restartpolicy: Alyways
 
@@ -47,3 +42,4 @@ spec:
         - name: firefly-iii-upload
           persistentVolumeClaim:
             claimName: firefly-iii-upload-pvc
+

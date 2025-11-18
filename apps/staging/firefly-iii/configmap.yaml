@@ -3,9 +3,6 @@ kind: ConfigMap
 metadata:
   name: firefly-iii-configmap
 data:
-  # QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://commafeed-db.amdhql.org:5432/commafeed"
-  # QUARKUS_DATASOURCE_DB_KIND: postgresql
   DB_HOST: "jdbc:postgresql://firefly-iii-db.amdhql.org:5432/firefly-iii"
   DB_PORT: "5432"
   DB_CONNECTIO: pgsql
-
