@@ -4,7 +4,8 @@ metadata:
   name: firefly-iii
 spec:
   ports:
-    - port: 8082
+    - port: 80
+      targetPort: 8082
   selector:
     app: firefly-iii
   type: ClusterIP
