@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: firefly-iii-configmap
 data:
-  DB_HOST: "jdbc:postgresql://firefly-iii-db.amdhql.org:5432/firefly-iii"
+  DB_HOST: "firefly-iii-db.amdhql.org"
   DB_PORT: "5432"
   DB_CONNECTION: pgsql
