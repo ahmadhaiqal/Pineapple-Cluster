@@ -12,10 +12,10 @@ spec:
       labels:
         app: firefly-iii
     spec:
-      # securityContext:
-      #   fsGroup: 33
-      #   runAsUser: 33
-      #   runAsGroup: 33
+      securityContext:
+        fsGroup: 33
+        runAsUser: 33
+        runAsGroup: 33
 
       containers:
         - name: firefly-iii
@@ -42,4 +42,3 @@ spec:
         - name: firefly-iii-upload
           persistentVolumeClaim:
             claimName: firefly-iii-upload-pvc
-
