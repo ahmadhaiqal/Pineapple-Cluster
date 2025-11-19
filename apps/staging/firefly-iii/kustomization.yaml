@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: firefly-iii
 resources:
   - ../../base/firefly-iii
-  # - cloudflare.yaml
-  # - cloudflare-secret.yaml
+  - cloudflare.yaml
+  - cloudflare-secret.yaml
   - configmap.yaml
   # - ingress.yaml
