@@ -21,7 +21,7 @@ spec:
         - name: firefly-iii
           image: fireflyiii/core:version-6.4.8
           ports:
-            - containerPort: 8082
+            - containerPort: 9092
               protocal: TCP
           securityContext:
             allowPrivilegeEscalation: false
