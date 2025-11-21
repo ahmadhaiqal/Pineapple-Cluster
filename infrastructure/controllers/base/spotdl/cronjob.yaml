@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: spotdl-sync
+  namespace: spotdl
+spec:
+  schedule: "0 */4 * * *"   # every 4 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: spotdl
+              image: spotdl/spotify-downloader:latest
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  mkdir -p /music && \
+                  /usr/local/bin/spotdl download --playlist-file /config/playlist.txt --output /music:ro
+              volumeMounts:
+                - name: music
+                  mountPath: /music:ro
+                - name: config
+                  mountPath: /config
+          restartPolicy: OnFailure
+          volumes:
+            - name: music
+              persistentVolumeClaim:
+                claimName: navidrome-music-pvc
+            - name: config
+              configMap:
+                name: spotdl-playlists

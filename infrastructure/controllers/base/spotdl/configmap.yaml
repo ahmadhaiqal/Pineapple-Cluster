@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spotdl-playlists
+  namespace: media
+data:
+  playlist.txt: |
+    https://open.spotify.com/playlist/37i9dQZEVXbJlfUljuZExa
+    https://open.spotify.com/playlist/37i9dQZF1DWWuGaVZsglfu
