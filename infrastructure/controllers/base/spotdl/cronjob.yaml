@@ -33,4 +33,4 @@ spec:
                 claimName: navidrome-music-pvc
             - name: config
               configMap:
-                name: spotdl-config-pvc
+                name: spotdl-playlists
