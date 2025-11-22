@@ -2,9 +2,9 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: spotdl-sync
-  namespace: spotdl
+  namespace: navidrome
 spec:
-  schedule: "0 */4 * * *"   # every 4 hours
+  schedule: "0 */4 * * *" # every 4 hours
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -34,3 +34,4 @@ spec:
             - name: config
               configMap:
                 name: spotdl-playlists
+
