@@ -15,12 +15,12 @@ spec:
             - name: spotdl
               image: spotdl/spotify-downloader:latest
               imagePullPolicy: IfNotPresent
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  mkdir -p /music:ro && \
-                  /usr/local/bin/spotdl download --playlist-file /config/playlist.txt --output /music:ro
+              # command:
+              #   - /bin/sh
+              #   - -c
+              #   - |
+              #     mkdir -p /music:ro && \
+              #     /usr/local/bin/spotdl download --playlist-file /config/playlist.txt --output /music:ro
               volumeMounts:
                 - name: music
                   mountPath: /music:ro
