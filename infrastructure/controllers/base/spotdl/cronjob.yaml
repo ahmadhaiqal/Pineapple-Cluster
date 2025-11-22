@@ -19,7 +19,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
-                  mkdir -p /music && \
+                  mkdir -p /music:ro && \
                   /usr/local/bin/spotdl download --playlist-file /config/playlist.txt --output /music:ro
               volumeMounts:
                 - name: music
@@ -33,5 +33,4 @@ spec:
                 claimName: navidrome-music-pvc
             - name: config
               configMap:
-                name: spotdl-playlists
-
+                name: spotdl-config-pvc
