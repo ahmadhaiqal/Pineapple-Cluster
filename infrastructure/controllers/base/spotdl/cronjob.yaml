@@ -20,7 +20,9 @@ spec:
                 - -c
                 - |
                   mkdir -p /music:ro
-                  sleep 1800
+                  uv run --project /app spotdl download \
+                  --playlist-file /config/playlist.txt \
+                  --output /music:ro
               # command:
               #   - /bin/sh
               #   - -c
