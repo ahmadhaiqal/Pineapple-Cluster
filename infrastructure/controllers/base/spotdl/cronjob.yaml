@@ -22,7 +22,6 @@ spec:
                   mkdir -p /music:ro
                   while read -r line; do
                   uv run --project /app spotdl \
-                    --cookie-file /config1/cookies.txt \
                     --output music:ro \
                     download "$line"
                   done < /config/playlist.txt
@@ -32,8 +31,6 @@ spec:
                   mountPath: /music:ro
                 - name: config
                   mountPath: /config
-                - name: config-cookies
-                  mountPath: /config1
           restartPolicy: OnFailure
           volumes:
             - name: music
@@ -42,6 +39,3 @@ spec:
             - name: config
               configMap:
                 name: spotdl-playlists
-            - name: config-cookies
-              configMap:
-                name: spotdl-cookies

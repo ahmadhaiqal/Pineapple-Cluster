@@ -4,4 +4,3 @@ resources:
   - namespace.yaml
   - cronjob.yaml
   - configmap.yaml
-  - configmap-cookies.yaml
