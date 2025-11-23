@@ -15,21 +15,17 @@ spec:
             - name: spotdl
               image: spotdl/spotify-downloader:latest
               imagePullPolicy: IfNotPresent
-              # Vjcommand:
-              #   - /bin/sh
-              #   - -c
-              #   - |
-              #     mkdir -p /music:ro
-              #     while read -r line; do
-              #     uv run --project /app spotdl download "$line" --output music:ro\
-              #       --cookie-file /config1/cookies.txt
-              #     done < /config/playlist.txt
-
               command:
                 - /bin/sh
                 - -c
                 - |
-                  sleep 1800
+                  mkdir -p /music:ro
+                  while read -r line; do
+                  uv run --project /app spotdl \
+                    --cookie-file /config1/cookies.txt \
+                    --output music:ro \
+                    download "$line"
+                  done < /config/playlist.txt
 
               volumeMounts:
                 - name: music
