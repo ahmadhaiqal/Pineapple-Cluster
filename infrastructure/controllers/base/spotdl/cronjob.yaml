@@ -19,6 +19,7 @@ spec:
                 - /bin/sh
                 - -c
                 - |
+                  mkdir -p /music:ro
                   sleep 1800
               # command:
               #   - /bin/sh
