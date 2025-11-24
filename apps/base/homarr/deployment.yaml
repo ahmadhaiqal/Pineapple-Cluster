@@ -27,9 +27,9 @@ spec:
           secrityContext:
             allowPrivilegeEscalation: false
 
-          # volumeMounts:
-          #   - name: homarr-appdata
-          #     mountPath: /appdata
+          volumeMounts:
+            - name: homarr-appdata
+              mountPath: /appdata
 
           envFrom:
             - secretRef:
@@ -37,7 +37,7 @@ spec:
 
       restartpolicy: Alyways
 
-      # volumes:
-      #   - name: homarr-appdata
-      #     persistentVolumeClaim:
-      #       claimName: homarr-appdata
+      volumes:
+        - name: homarr-appdata
+          persistentVolumeClaim:
+            claimName: homarr-appdata
