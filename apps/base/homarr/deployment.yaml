@@ -21,15 +21,19 @@ spec:
         - name: homarr
           image: ghcr.io/homarr-labs/homarr:v1.44.0
           ports:
-            - containerPort: 3005
+            - containerPort: 7575
               protocal: TCP
 
-          securityContext:
+          secrityContext:
             allowPrivilegeEscalation: false
 
           volumeMounts:
             - name: homarr-appdata
               mountPath: /appdata
+
+          envFrom:
+            - secretRef:
+                name: homarr-container-env
 
       restartpolicy: Alyways
 
