@@ -3,6 +3,6 @@ kind: Kustomization
 namespace: homarr
 resources:
   - ../../base/homarr
-  # - cloudflare.yaml
-  # - cloudflare-secret.yaml
+  - cloudflare.yaml
+  - cloudflare-secret.yaml
   #- ingress.yaml
