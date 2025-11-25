@@ -13,18 +13,24 @@ spec:
         spec:
           containers:
             - name: spotdl
-              image: spotdl/spotify-downloader
+              image: freyrcli/freyrjs
               imagePullPolicy: IfNotPresent
+              # command:
+              #   - /bin/sh
+              #   - -c
+              #   - |
+              #     mkdir -p /music:ro
+              #     while read -r line; do
+              #     uv run --project /app spotdl \
+              #       --output music:ro \
+              #       download "$line"
+              #     done < /config/playlist.txt
+
               command:
                 - /bin/sh
                 - -c
                 - |
-                  mkdir -p /music:ro
-                  while read -r line; do
-                  uv run --project /app spotdl \
-                    --output music:ro \
-                    download "$line"
-                  done < /config/playlist.txt
+                  sleep 1800
 
               volumeMounts:
                 - name: music
