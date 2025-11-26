@@ -27,8 +27,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: n8n-configmap
-            # - secretRef:
-            #     name: n8n-container-env
+            - secretRef:
+                name: n8n-container-env
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -36,7 +36,6 @@ spec:
           volumeMounts:
             - name: n8n-data
               mountPath: /home/node/.n8n
-
 
       restartpolicy: Alyways
 

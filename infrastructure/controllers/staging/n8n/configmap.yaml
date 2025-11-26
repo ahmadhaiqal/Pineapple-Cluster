@@ -6,3 +6,4 @@ data:
   DB_TYPE: postgresdb
   DB_POSTGRESDB_HOST: "n8n-db.amdhql.org"
   DB_POSTGRESDB_PORT: "5432"
+  DB_POSTGRESDB_SCHEMA: public

@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - commafeed
   - firefly-iii
+  - n8n

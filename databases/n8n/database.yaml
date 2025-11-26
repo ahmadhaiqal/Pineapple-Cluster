@@ -16,7 +16,7 @@ spec:
       policy-type: "database"
 
   storage:
-    size: 3Gi
+    size: 10Gi
 
   bootstrap:
     initdb:
