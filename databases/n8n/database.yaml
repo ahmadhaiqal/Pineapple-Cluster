@@ -1,0 +1,31 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: n8n-db-production-cnpg-v1
+spec:
+  description: Postgres cluster for the n8n application
+  imageName: quay.io/enterprisedb/postgresql:16.1
+  instances: 2
+
+  monitoring:
+    enablePodMonitor: true
+
+  inheritedMetadata:
+    labels:
+      app: n8n-database
+      policy-type: "database"
+
+  storage:
+    size: 3Gi
+
+  bootstrap:
+    initdb:
+      database: n8n
+      owner: n8n
+      secret:
+        name: n8n-db-creds
+
+  # handy: resources can be used to trigger a redeploy
+  resources:
+    requests:
+      memory: 10Gi
