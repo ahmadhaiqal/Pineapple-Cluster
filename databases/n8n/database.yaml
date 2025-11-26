@@ -16,7 +16,7 @@ spec:
       policy-type: "database"
 
   storage:
-    size: 10Gi
+    size: 5Gi
 
   bootstrap:
     initdb:
@@ -28,4 +28,4 @@ spec:
   # handy: resources can be used to trigger a redeploy
   resources:
     requests:
-      memory: 10Gi
+      memory: 600Mi
