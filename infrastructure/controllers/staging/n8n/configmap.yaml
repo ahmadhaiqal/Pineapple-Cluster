@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: n8n-configmap
 data:
+  WEBHOOK_URL: "https://n8n.amdhql.org"
   DB_TYPE: postgresdb
   DB_POSTGRESDB_HOST: "n8n-db.amdhql.org"
   DB_POSTGRESDB_PORT: "5432"
