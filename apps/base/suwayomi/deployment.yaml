@@ -19,7 +19,7 @@ spec:
 
       containers:
         - name: suwayomi
-          image: ghcr.io/suwayomi/suwayomi-server:v2.1.2071
+          image: ghcr.io/suwayomi/suwayomi-server:v2.1.2078
           ports:
             - containerPort: 4567
 
