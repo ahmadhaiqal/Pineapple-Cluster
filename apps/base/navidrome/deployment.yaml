@@ -32,9 +32,9 @@ spec:
               mountPath: /data
             - name: navidrome-music
               mountPath: /music:ro
-      
-      restartpolicy: Alyways
-      
+
+      restartPolicy: Always
+
       volumes:
         - name: navidrome-data
           persistentVolumeClaim:
