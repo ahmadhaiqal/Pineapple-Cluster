@@ -13,7 +13,7 @@ spec:
         spec:
           containers:
             - name: spotdl
-              image: ghcr.io/spotdl/spotify-downloader
+              image: spotdl/spotify-downloader:v4.5.0
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
