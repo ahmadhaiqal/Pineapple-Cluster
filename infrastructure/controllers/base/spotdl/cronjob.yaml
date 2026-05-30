@@ -21,7 +21,7 @@ spec:
                 - |
                   while IFS= read -r line; do
                     [ -z "$line" ] && continue
-                    spotdl --output /music download "$line"
+                    /app/.venv/bin/spotdl --output /music download "$line"
                   done < /config/playlist.txt
 
               volumeMounts:
