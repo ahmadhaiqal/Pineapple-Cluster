@@ -24,6 +24,12 @@ spec:
               value: "0.0.0.0"
             - name: COMET_FASTAPI_PORT
               value: "8000"
+            - name: COMET_INDEXER_MANAGER
+              value: "prowlarr"
+            - name: COMET_INDEXER_MANAGER_URL
+              value: "http://prowlarr.prowlarr.svc.cluster.local:9696"
+            - name: COMET_INDEXER_MANAGER_INDEXERS
+              value: '["*"]'
 
           securityContext:
             allowPrivilegeEscalation: false
