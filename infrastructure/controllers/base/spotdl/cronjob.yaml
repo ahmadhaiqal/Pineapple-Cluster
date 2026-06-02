@@ -9,6 +9,7 @@ spec:
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 10800 # kill after 3 hours (prevents pile-up when rate-limited)
       template:
         spec:
           containers:
@@ -21,7 +22,7 @@ spec:
                 - |
                   while IFS= read -r line; do
                     [ -z "$line" ] && continue
-                    /app/.venv/bin/spotdl --audio piped --output /music download "$line"
+                    /app/.venv/bin/spotdl --audio youtube piped soundcloud --output /music download "$line"
                   done < /config/playlist.txt
 
               volumeMounts:
