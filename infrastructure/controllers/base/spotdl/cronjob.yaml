@@ -4,7 +4,7 @@ metadata:
   name: spotdl-sync
   namespace: navidrome
 spec:
-  schedule: "0 */4 * * *" # every 4 hours
+  schedule: "0 3 * * *" # every day at 3am
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -22,7 +22,7 @@ spec:
                 - |
                   while IFS= read -r line; do
                     [ -z "$line" ] && continue
-                    /app/.venv/bin/spotdl --audio youtube piped soundcloud --output /music download "$line"
+                    /app/.venv/bin/spotdl --audio youtube piped --output /music download "$line"
                   done < /config/playlist.txt
 
               volumeMounts:
