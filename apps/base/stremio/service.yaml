@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stremio
+spec:
+  selector:
+    app: stremio
+  ports:
+    - port: 11470
+      targetPort: 11470
+      protocol: TCP
