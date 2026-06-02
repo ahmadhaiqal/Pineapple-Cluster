@@ -5,3 +5,4 @@ resources:
   - ../../base/comet
   - cloudflare.yaml
   - cloudflare-secret.yaml
+  - prowlarr-secret.yaml

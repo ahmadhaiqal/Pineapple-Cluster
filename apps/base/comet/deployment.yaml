@@ -30,6 +30,11 @@ spec:
               value: "http://prowlarr.prowlarr.svc.cluster.local:9696"
             - name: COMET_INDEXER_MANAGER_INDEXERS
               value: '["*"]'
+            - name: COMET_INDEXER_MANAGER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: comet-prowlarr
+                  key: api_key
 
           securityContext:
             allowPrivilegeEscalation: false
