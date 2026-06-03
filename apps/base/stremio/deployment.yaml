@@ -18,6 +18,9 @@ spec:
           ports:
             - containerPort: 11470
               protocol: TCP
+          env:
+            - name: IPADDRESS
+              value: "https://stremio.amdhql.org"
 
           securityContext:
             allowPrivilegeEscalation: false
