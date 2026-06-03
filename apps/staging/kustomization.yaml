@@ -9,5 +9,5 @@ resources:
   - firefly-iii
   - navidrome
   - stremio
-  - comet
-  - prowlarr
+  # - comet
+  # - prowlarr
