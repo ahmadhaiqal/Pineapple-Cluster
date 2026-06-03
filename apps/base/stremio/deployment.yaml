@@ -19,12 +19,8 @@ spec:
             - containerPort: 8080
               protocol: TCP
           env:
-            - name: AUTO_SERVER_URL
-              value: "1"
-            - name: DOMAIN
-              value: "stremio.amdhql.org"
-            # - name: SERVER_URL
-            #   value: "https://stremio.amdhql.org"
+            - name: SERVER_URL
+              value: "https://stremio.amdhql.org"
 
           securityContext:
             allowPrivilegeEscalation: false
