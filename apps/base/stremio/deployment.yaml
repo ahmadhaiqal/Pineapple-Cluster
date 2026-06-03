@@ -19,7 +19,9 @@ spec:
             - containerPort: 11470
               protocol: TCP
           env:
-            - name: IPADDRESS
+            - name: NO_CORS
+              value: "1"
+            - name: SERVER_URL
               value: "https://stremio.amdhql.org"
 
           securityContext:
