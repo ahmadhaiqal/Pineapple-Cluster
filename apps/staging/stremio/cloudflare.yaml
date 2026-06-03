@@ -60,5 +60,5 @@ data:
 
     ingress:
     - hostname: stremio.amdhql.org
-      service: http://stremio:11470
+      service: http://stremio:8080
     - service: http_status:404

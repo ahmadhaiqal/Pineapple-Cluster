@@ -6,6 +6,6 @@ spec:
   selector:
     app: stremio
   ports:
-    - port: 11470
-      targetPort: 11470
+    - port: 8080
+      targetPort: 8080
       protocol: TCP

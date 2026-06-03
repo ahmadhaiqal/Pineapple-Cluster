@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
         - name: stremio
-          image: stremio/server:latest
+          image: tsaridas/stremio-docker:latest
           ports:
-            - containerPort: 11470
+            - containerPort: 8080
               protocol: TCP
           env:
             - name: NO_CORS
