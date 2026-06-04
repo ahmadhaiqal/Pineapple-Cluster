@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared-qbittorrent
+spec:
+  selector:
+    matchLabels:
+      app: cloudflared-qbittorrent
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: cloudflared-qbittorrent
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --config
+            - /etc/cloudflared/config/config.yaml
+            - run
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config
+              readOnly: true
+            - name: creds
+              mountPath: /etc/cloudflared/creds
+              readOnly: true
+      volumes:
+        - name: creds
+          secret:
+            secretName: tunnel-credentials-qbittorrent
+        - name: config
+          configMap:
+            name: cloudflared-qbittorrent
+            items:
+              - key: config.yaml
+                path: config.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-qbittorrent
+data:
+  config.yaml: |
+    tunnel: qbittorrent
+
+    credentials-file: /etc/cloudflared/creds/credentials.json
+
+    metrics: 0.0.0.0:2000
+    no-autoupdate: true
+
+    ingress:
+    - hostname: qbittorrent.amdhql.org
+      service: http://qbittorrent:8080
+
+    - service: http_status:404

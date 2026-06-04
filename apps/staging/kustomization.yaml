@@ -9,5 +9,7 @@ resources:
   - firefly-iii
   - navidrome
   - stremio
+  - jellyfin
+  - qbittorrent
   # - comet
   # - prowlarr
