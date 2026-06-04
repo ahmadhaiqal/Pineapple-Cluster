@@ -5,3 +5,4 @@ resources:
   - ../../base/qbittorrent
   - cloudflare.yaml
   - cloudflare-secret.yaml
+  - vpn-secret.yaml

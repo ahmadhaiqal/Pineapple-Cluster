@@ -23,6 +23,24 @@ spec:
                       - urial-lab
 
       containers:
+        - name: gluetun
+          image: qmcgaw/gluetun:latest
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+            allowPrivilegeEscalation: false
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: protonvpn
+            - name: VPN_TYPE
+              value: wireguard
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gluetun-vpn-credentials
+                  key: WIREGUARD_PRIVATE_KEY
+
         - name: qbittorrent
           image: lscr.io/linuxserver/qbittorrent:latest
           ports:
