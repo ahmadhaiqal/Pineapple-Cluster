@@ -21,6 +21,16 @@ spec:
           env:
             - name: SERVER_URL
               value: "https://stremio.amdhql.org"
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: stremio-auth
+                  key: USERNAME
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: stremio-auth
+                  key: PASSWORD
 
           securityContext:
             allowPrivilegeEscalation: false
