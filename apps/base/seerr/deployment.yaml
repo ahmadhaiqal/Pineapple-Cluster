@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seerr
+  template:
+    metadata:
+      labels:
+        app: seerr
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+
+      containers:
+        - name: seerr
+          image: seerr/seerr:latest
+          ports:
+            - containerPort: 5055
+              protocol: TCP
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          volumeMounts:
+            - name: seerr-config
+              mountPath: /app/config
+
+      restartPolicy: Always
+
+      volumes:
+        - name: seerr-config
+          persistentVolumeClaim:
+            claimName: seerr-config-pvc
