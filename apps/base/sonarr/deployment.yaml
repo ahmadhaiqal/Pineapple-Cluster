@@ -51,25 +51,6 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - sh
-                  - -c
-                  - |
-                    until [ -f /config/config.xml ] && \
-                      KEY=$(sed -n 's|.*<ApiKey>\(.*\)</ApiKey>.*|\1|p' /config/config.xml) && \
-                      curl -sf http://localhost:8989/api/v3/system/status \
-                        -H "X-Api-Key: $KEY" > /dev/null 2>&1; do
-                      sleep 5
-                    done
-                    curl -sf http://localhost:8989/api/v3/rootfolder \
-                      -H "X-Api-Key: $KEY" | grep -q '/data/media/tv' || \
-                    curl -sf -X POST http://localhost:8989/api/v3/rootfolder \
-                      -H "X-Api-Key: $KEY" -H "Content-Type: application/json" \
-                      -d '{"path":"/data/media/tv"}'
-
           volumeMounts:
             - name: sonarr-config
               mountPath: /config
