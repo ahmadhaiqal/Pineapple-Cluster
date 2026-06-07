@@ -13,3 +13,6 @@ resources:
   - qbittorrent
   # - comet
   - prowlarr
+  - sonarr
+  - radarr
+  - seerr
