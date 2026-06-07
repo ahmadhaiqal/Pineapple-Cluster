@@ -25,6 +25,14 @@ spec:
       securityContext:
         fsGroup: 1000
 
+      initContainers:
+        - name: init-dirs
+          image: busybox:latest
+          command: ["sh", "-c", "mkdir -p /data/media/tv /data/torrents/tv"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
       containers:
         - name: sonarr
           image: lscr.io/linuxserver/sonarr:latest

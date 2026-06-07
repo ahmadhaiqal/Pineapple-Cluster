@@ -25,6 +25,14 @@ spec:
       securityContext:
         fsGroup: 1000
 
+      initContainers:
+        - name: init-dirs
+          image: busybox:latest
+          command: ["sh", "-c", "mkdir -p /data/media/movies /data/torrents/movies"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr:latest

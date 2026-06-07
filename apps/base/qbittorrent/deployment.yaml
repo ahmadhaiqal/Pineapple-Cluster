@@ -22,6 +22,14 @@ spec:
                     values:
                       - urial-lab
 
+      initContainers:
+        - name: init-dirs
+          image: busybox:latest
+          command: ["sh", "-c", "mkdir -p /media/movies /media/tv"]
+          volumeMounts:
+            - name: media
+              mountPath: /media
+
       containers:
         - name: gluetun
           image: qmcgaw/gluetun:latest
