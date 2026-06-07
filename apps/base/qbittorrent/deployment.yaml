@@ -25,10 +25,21 @@ spec:
       initContainers:
         - name: init-dirs
           image: busybox:latest
-          command: ["sh", "-c", "mkdir -p /data/torrents/movies /data/torrents/tv"]
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data/torrents/movies /data/torrents/tv
+              mkdir -p /config/qBittorrent
+              if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then
+                printf '[Preferences]\nDownloads\\SavePath=/data/torrents/\nDownloads\\TempPath=/data/torrents/incomplete/\n' \
+                  > /config/qBittorrent/qBittorrent.conf
+              fi
           volumeMounts:
             - name: media
               mountPath: /data
+            - name: qbittorrent-config
+              mountPath: /config
 
       containers:
         - name: gluetun
