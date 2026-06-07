@@ -4,3 +4,5 @@ namespace: movietime
 resources:
   - ../../base/sonarr
   - cloudflare.yaml
+  - cloudflare-secret.yaml
+

@@ -4,3 +4,5 @@ namespace: movietime
 resources:
   - ../../base/seerr
   - cloudflare.yaml
+  - cloudflare-secret.yaml
+

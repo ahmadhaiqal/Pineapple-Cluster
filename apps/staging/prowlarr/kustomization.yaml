@@ -4,3 +4,4 @@ namespace: prowlarr
 resources:
   - ../../base/prowlarr
   - cloudflare.yaml
+  - cloudflare-secret.yaml
