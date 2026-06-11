@@ -36,9 +36,6 @@ spec:
             name: immich-db-creds
             key: password
 
-    postgresql:
-      enabled: false
-
     redis:
       enabled: true
 
