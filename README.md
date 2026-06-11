@@ -16,12 +16,13 @@ This repository is the **source of truth** for the **Pineapple-Cluster** Kuberne
 ### ✨ Key Features
 - ✅ Declarative cluster configuration
 - 🔄 GitOps-driven updates with FluxCD
-- 🤖 Automated dependency updates via Renovate
+- 🤖 Automated dependency updates via Renovate (container images + Helm charts)
 - 🔐 Secure secrets management with SOPS + Age
 - 📊 Observability stack (Prometheus + Grafana)
 - 🌐 Networking powered by **Cilium**
-- 🚪 Ingress via **Traefik** with **Cloudflare DNS solver**
+- 🚪 Ingress via **Traefik** with **Cloudflare tunnels**
 - 💾 Persistent storage via **Longhorn**
+- 📌 All container images pinned to explicit version tags
 
 ---
 
@@ -36,7 +37,7 @@ flowchart LR
     KUST["📋 Kustomizations\ninfrastructure · apps\ndatabases · monitoring"]
     CLUSTER["☸️ Pineapple-Cluster"]
 
-    REN -- "Opens version-bump PRs" --> GH
+    REN -- "Opens version-bump PRs\n(images + Helm charts)" --> GH
     GH -- "Merge to main" --> GH
     GH -- "Polls repo" --> FLUX
     SOPS -- "Age private key\ndecrypts Secrets" --> FLUX
@@ -52,7 +53,7 @@ flowchart LR
 flowchart TB
     %% External
     OMNI["🖥 Sidero Omni\nTalos Provisioner"]
-    CF["☁️ Cloudflare\nDNS + ACME"]
+    CF["☁️ Cloudflare\nDNS + Tunnels"]
 
     %% Cluster boundary
     subgraph CLUSTER["☸️ Pineapple-Cluster"]
@@ -67,7 +68,6 @@ flowchart TB
             direction TB
             CILIUM["🌐 Cilium\nCNI · L2 LB"]
             TRAEFIK["🚪 Traefik\nIngress"]
-            CERTMGR["🔏 cert-manager\nTLS Certs"]
             EXTDNS["🌍 external-dns\nDNS Sync"]
             LONGHORN["💾 Longhorn\nDistributed Storage"]
             CNPG["🐘 CloudNativePG\nPostgres Operator"]
@@ -82,10 +82,10 @@ flowchart TB
 
         subgraph DB["🗄 Databases (PostgreSQL)"]
             direction LR
-            PG1["commafeed-db"]
-            PG2["firefly-db"]
-            PG3["n8n-db"]
-            PG4["suwayomi-db"]
+            PG1["firefly-db"]
+            PG2["n8n-db"]
+            PG3["suwayomi-db"]
+            PG4["immich-db"]
         end
 
         subgraph PLATFORM["⚙️ Platform Services"]
@@ -95,6 +95,17 @@ flowchart TB
             SPOTDL["🎶 SpotDL\nSpotify DL"]
         end
 
+        subgraph MEDIA["🎬 Media Stack (urial-lab)"]
+            direction LR
+            JELLY["🎞 Jellyfin\nMedia Server"]
+            SONARR["📺 Sonarr\nTV Manager"]
+            RADARR["🎬 Radarr\nMovie Manager"]
+            PROWLARR["🔍 Prowlarr\nIndexer"]
+            QB["⬇️ qBittorrent\n+ Gluetun VPN"]
+            SEERR["🔎 Seerr\nRequest Manager"]
+            STREMIO["📡 Stremio\nStream Server"]
+        end
+
         subgraph APPS["📦 User Applications"]
             direction LR
             HOMARR["🏠 Homarr\nDashboard"]
@@ -102,26 +113,27 @@ flowchart TB
             NAVI["🎵 Navidrome\nMusic"]
             SUWA["📖 Suwayomi\nManga"]
             FIREFLY["💰 Firefly III\nFinance"]
-            COMMA["📰 CommаFeed\nRSS"]
             LINK["🔖 Linkding\nBookmarks"]
+            IMMICH["📷 Immich\nPhoto Gallery"]
         end
     end
 
     %% External connections
     OMNI -- "Provisions & manages OS" --> NODES
     CF <-- "DNS records" --> EXTDNS
-    CF <-- "ACME challenge" --> CERTMGR
+    CF <-- "Tunnels traffic" --> TRAEFIK
 
     %% Infrastructure wiring
-    CERTMGR --> TRAEFIK
-    EXTDNS --> TRAEFIK
     CILIUM -. "Network policies" .-> APPS
+    CILIUM -. "Network policies" .-> MEDIA
     LONGHORN -- "PVCs" --> APPS
+    LONGHORN -- "PVCs" --> MEDIA
     LONGHORN -- "PVCs" --> DB
     CNPG -- "Manages clusters" --> DB
 
     %% Ingress routing
     TRAEFIK --> APPS
+    TRAEFIK --> MEDIA
     TRAEFIK --> PLATFORM
 
     %% Observability
@@ -131,10 +143,19 @@ flowchart TB
     PROM -. "Scrapes metrics" .-> INFRA
 
     %% App → DB
-    COMMA --> PG1
-    FIREFLY --> PG2
-    N8N --> PG3
-    SUWA --> PG4
+    FIREFLY --> PG1
+    N8N --> PG2
+    SUWA --> PG3
+    IMMICH --> PG4
+
+    %% Media stack wiring
+    SEERR -. "Requests" .-> SONARR
+    SEERR -. "Requests" .-> RADARR
+    SONARR -. "Sends to" .-> QB
+    RADARR -. "Sends to" .-> QB
+    PROWLARR -. "Indexers" .-> SONARR
+    PROWLARR -. "Indexers" .-> RADARR
+    QB -. "Downloads" .-> JELLY
 
     %% Inter-service
     FLARE -. "Proxy for scraping" .-> SUWA
@@ -156,14 +177,14 @@ flowchart TB
 | Layer | Technology |
 |---|---|
 | 🌐 Networking | Cilium (CNI + L2 LoadBalancer) |
-| 🚪 Ingress | Traefik |
-| 🔐 DNS & Certs | cert-manager + Cloudflare DNS solver |
+| 🚪 Ingress | Traefik + Cloudflare Tunnels |
+| 🌍 DNS | external-dns + Cloudflare |
 | 💾 Storage | Longhorn |
 | 🔑 Secrets | SOPS with Age |
 | 📊 Observability | Prometheus + Grafana + Alertmanager |
 | 🗄 Database | CloudNativePG (PostgreSQL) |
 | 🔄 GitOps | FluxCD |
-| 🤖 Update Automation | Renovate |
+| 🤖 Update Automation | Renovate (images + Helm charts) |
 | 🖥 Node OS | Talos (via Sidero Omni) |
 
 ---
@@ -177,8 +198,20 @@ flowchart TB
 | [Navidrome](https://www.navidrome.org) | Music streaming server | — |
 | [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) | Manga reader | PostgreSQL |
 | [Firefly III](https://www.firefly-iii.org) | Personal finance manager | PostgreSQL |
-| [CommаFeed](https://www.commafeed.com) | RSS/Atom feed reader | PostgreSQL |
 | [Linkding](https://github.com/sissbruecker/linkding) | Bookmark manager | — |
+| [Immich](https://immich.app) | Self-hosted photo & video gallery | PostgreSQL |
+
+## 🎬 Media Stack
+
+| App | Description | Database |
+|---|---|---|
+| [Jellyfin](https://jellyfin.org) | Media server | — |
+| [Sonarr](https://sonarr.tv) | TV series manager | — |
+| [Radarr](https://radarr.video) | Movie manager | — |
+| [Prowlarr](https://github.com/Prowlarr/Prowlarr) | Indexer manager for Sonarr/Radarr | — |
+| [qBittorrent](https://www.qbittorrent.org) | Torrent client (via Gluetun VPN) | — |
+| [Seerr](https://github.com/seerr/seerr) | Media request & discovery manager | — |
+| [Stremio](https://www.stremio.com) | Stream aggregator server | — |
 
 ## ⚙️ Platform Services
 
