@@ -5,7 +5,7 @@ metadata:
 spec:
   description: Postgres cluster for the firefly-iii application
   imageName: quay.io/enterprisedb/postgresql:16.1
-  instances: 2
+  instances: 1
 
   monitoring:
     enablePodMonitor: true
