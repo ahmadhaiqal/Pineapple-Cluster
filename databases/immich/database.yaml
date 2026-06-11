@@ -24,6 +24,11 @@ spec:
       owner: immich
       secret:
         name: immich-db-creds
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        - CREATE EXTENSION IF NOT EXISTS "vectors"
+        - ALTER SCHEMA vectors OWNER TO immich
+        - SELECT vectors.set_index_option('', 'optimizing.optimizing_threads', '1')
 
   resources:
     requests:
