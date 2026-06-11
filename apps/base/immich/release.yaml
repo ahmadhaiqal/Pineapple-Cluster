@@ -50,17 +50,6 @@ spec:
                     values:
                       - urial-lab
 
-    microservices:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - urial-lab
-
     machine-learning:
       affinity:
         nodeAffinity:
