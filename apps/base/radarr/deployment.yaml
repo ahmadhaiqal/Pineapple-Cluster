@@ -27,7 +27,7 @@ spec:
 
       initContainers:
         - name: init-dirs
-          image: busybox:latest
+          image: busybox:1.38.0
           command: ["sh", "-c", "mkdir -p /data/media/movies /data/torrents/movies"]
           volumeMounts:
             - name: data
@@ -35,7 +35,7 @@ spec:
 
       containers:
         - name: radarr
-          image: lscr.io/linuxserver/radarr:latest
+          image: lscr.io/linuxserver/radarr:6.2.1.10461-ls305
           ports:
             - containerPort: 7878
               protocol: TCP

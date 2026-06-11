@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: comet
-          image: ghcr.io/g0ldyy/comet:latest
+          image: ghcr.io/g0ldyy/comet:v2.54.1
           ports:
             - containerPort: 8000
               protocol: TCP

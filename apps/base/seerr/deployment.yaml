@@ -19,7 +19,7 @@ spec:
 
       containers:
         - name: seerr
-          image: seerr/seerr:latest
+          image: seerr/seerr:v3.3.0
           ports:
             - containerPort: 5055
               protocol: TCP
