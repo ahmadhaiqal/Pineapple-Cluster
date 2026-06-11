@@ -1,0 +1,1 @@
+{"nodes": [{"id": "sonarr_service_sonarr", "label": "Sonarr Service (ClusterIP:8989)", "file_type": "code", "source_file": "apps/base/sonarr/service.yaml", "source_location": "spec.ports[0].port=8989", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

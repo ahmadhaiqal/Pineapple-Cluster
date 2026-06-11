@@ -1,0 +1,1 @@
+{"nodes": [{"id": "linkding_storage_linkding_data_pvc", "label": "Linkding Data PVC", "file_type": "code", "source_file": "apps/base/linkding/storage.yaml", "source_location": "line 1-12", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

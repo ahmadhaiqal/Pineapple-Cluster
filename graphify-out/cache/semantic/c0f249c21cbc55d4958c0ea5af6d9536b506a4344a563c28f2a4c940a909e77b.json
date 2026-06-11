@@ -1,0 +1,1 @@
+{"nodes": [{"id": "seerr_storage_seerr_config_pvc", "label": "Seerr Config PVC (1Gi Longhorn)", "file_type": "code", "source_file": "apps/base/seerr/storage.yaml", "source_location": "metadata.name=seerr-config-pvc", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

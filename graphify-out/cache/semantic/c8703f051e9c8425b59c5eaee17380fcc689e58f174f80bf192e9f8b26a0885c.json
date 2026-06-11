@@ -1,0 +1,1 @@
+{"nodes": [{"id": "cloudnativepg_repository_helmrepository", "label": "CloudNativePG HelmRepository", "file_type": "code", "source_file": "infrastructure/controllers/base/cloudnativepg/repository.yaml", "source_location": "metadata.name=cnpg", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

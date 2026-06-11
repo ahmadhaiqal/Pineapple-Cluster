@@ -1,0 +1,1 @@
+{"nodes": [{"id": "traefik_namespace_traefik_ns", "label": "Traefik Namespace", "file_type": "code", "source_file": "infrastructure/controllers/base/traefik/namespace.yaml", "source_location": "metadata.name", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

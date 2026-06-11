@@ -1,0 +1,1 @@
+{"nodes": [{"id": "externaldns_namespace_externaldns", "label": "ExternalDNS Namespace", "file_type": "code", "source_file": "infrastructure/controllers/base/external-dns/namespace.yaml", "source_location": "metadata.name=external-dns", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

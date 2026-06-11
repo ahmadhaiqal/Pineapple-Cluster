@@ -1,0 +1,1 @@
+{"nodes": [{"id": "stremio_storage_stremio_data_pvc", "label": "Stremio Data PVC (1Gi Longhorn)", "file_type": "code", "source_file": "apps/base/stremio/storage.yaml", "source_location": "metadata.name=stremio-data-pvc", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

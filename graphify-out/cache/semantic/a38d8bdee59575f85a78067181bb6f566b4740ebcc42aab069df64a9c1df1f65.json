@@ -1,0 +1,1 @@
+{"nodes": [{"id": "suwayomi_service_suwayomi", "label": "Suwayomi Service (ClusterIP:4567)", "file_type": "code", "source_file": "apps/base/suwayomi/service.yaml", "source_location": "spec.ports[0].port=4567", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

@@ -1,0 +1,1 @@
+{"nodes": [{"id": "stremio_service_stremio", "label": "Stremio Service (port:8080)", "file_type": "code", "source_file": "apps/base/stremio/service.yaml", "source_location": "spec.ports[0].port=8080", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
