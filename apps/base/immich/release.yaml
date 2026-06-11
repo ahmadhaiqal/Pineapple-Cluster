@@ -22,19 +22,23 @@ spec:
         library:
           existingClaim: immich-library
 
-    env:
-      DB_HOSTNAME: immich-db-lb
-      DB_DATABASE_NAME: immich
-      DB_USERNAME:
-        valueFrom:
-          secretKeyRef:
-            name: immich-db-creds
-            key: username
-      DB_PASSWORD:
-        valueFrom:
-          secretKeyRef:
-            name: immich-db-creds
-            key: password
+    controllers:
+      main:
+        containers:
+          main:
+            env:
+              DB_HOSTNAME: immich-db-lb
+              DB_DATABASE_NAME: immich
+              DB_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-db-creds
+                    key: username
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-db-creds
+                    key: password
 
     valkey:
       enabled: true
