@@ -36,7 +36,7 @@ spec:
             name: immich-db-creds
             key: password
 
-    redis:
+    valkey:
       enabled: true
 
     server:
