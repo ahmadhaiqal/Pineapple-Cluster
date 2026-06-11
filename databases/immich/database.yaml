@@ -4,7 +4,7 @@ metadata:
   name: immich-db-production-cnpg-v1
 spec:
   description: Postgres cluster for the immich application
-  imageName: quay.io/enterprisedb/postgresql:16.1
+  imageName: ghcr.io/immich-app/postgres:16-vectorchord0.3.0-pgvectors0.3.0
   instances: 1
 
   monitoring:
