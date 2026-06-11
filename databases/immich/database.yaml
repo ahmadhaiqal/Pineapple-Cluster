@@ -4,7 +4,7 @@ metadata:
   name: immich-db-production-cnpg-v1
 spec:
   description: Postgres cluster for the immich application
-  imageName: ghcr.io/immich-app/postgres:16-vectorchord0.3.0-pgvectors0.3.0
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
   instances: 1
 
   monitoring:
@@ -26,9 +26,7 @@ spec:
         name: immich-db-creds
       postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
-        - CREATE EXTENSION IF NOT EXISTS "vectors"
-        - ALTER SCHEMA vectors OWNER TO immich
-        - SELECT vectors.set_index_option('', 'optimizing.optimizing_threads', '1')
+        - CREATE EXTENSION IF NOT EXISTS "vector"
 
   resources:
     requests:
