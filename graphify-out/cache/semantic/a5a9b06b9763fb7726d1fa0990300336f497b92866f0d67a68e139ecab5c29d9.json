@@ -1,1 +1,0 @@
-{"nodes": [{"id": "flaresolverr_deployment_deploy", "label": "FlareSolverr Deployment", "file_type": "code", "source_file": "infrastructure/controllers/base/flaresolverr/deployment.yaml", "source_location": "metadata.name=flaresolverr", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

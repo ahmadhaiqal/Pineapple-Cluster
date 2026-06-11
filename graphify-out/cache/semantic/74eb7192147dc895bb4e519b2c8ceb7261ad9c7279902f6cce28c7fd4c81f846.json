@@ -1,1 +1,0 @@
-{"nodes": [{"id": "renovate_configmap_renovate_configmap", "label": "Renovate ConfigMap", "file_type": "code", "source_file": "infrastructure/controllers/base/renovate/configmap.yaml", "source_location": "metadata.name", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

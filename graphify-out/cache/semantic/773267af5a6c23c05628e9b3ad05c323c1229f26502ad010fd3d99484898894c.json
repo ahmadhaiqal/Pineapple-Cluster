@@ -1,1 +1,0 @@
-{"nodes": [{"id": "prowlarr_storage_prowlarr_config_pvc", "label": "Prowlarr Config PVC", "file_type": "code", "source_file": "apps/base/prowlarr/storage.yaml", "source_location": "line 1-12", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

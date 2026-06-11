@@ -2,5 +2,5 @@
 kubeconfig
 CLAUDE.md
 .claude/settings.local.json
-graphify-out/.graphify_python
-graphify-out/.graphify_root
+graphify-out/
+.claude/skills/graphify/

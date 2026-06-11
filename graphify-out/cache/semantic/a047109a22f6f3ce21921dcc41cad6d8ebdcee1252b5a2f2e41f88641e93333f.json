@@ -1,1 +1,0 @@
-{"nodes": [{"id": "cilium_repository_helmrepository", "label": "Cilium HelmRepository", "file_type": "code", "source_file": "infrastructure/controllers/base/cilium/repository.yaml", "source_location": "metadata.name=cilium", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
