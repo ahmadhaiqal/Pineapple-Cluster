@@ -12,6 +12,7 @@ spec:
       labels:
         app: n8n
     spec:
+      enableServiceLinks: false
       securityContext:
         fsGroup: 1000
         runAsUser: 1000
@@ -19,7 +20,7 @@ spec:
 
       containers:
         - name: n8n
-          image: docker.n8n.io/n8nio/n8n
+          image: docker.n8n.io/n8nio/n8n:2.26.3
           ports:
             - containerPort: 5678
               protocal: TCP
