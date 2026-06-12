@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: cloudnative-pg
-      version: "0.26.0" # or latest
+      version: "0.28.3" # or latest
       sourceRef:
         kind: HelmRepository
         name: cnpg
