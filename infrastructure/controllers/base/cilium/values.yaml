@@ -38,7 +38,7 @@ hubble:
     service:
       annotations:
         omni-kube-service-exposer.sidero.dev/port: "5000"
-        omni-kube-service-exposer.Sidero.dev/label: Hubble
+        omni-kube-service-exposer.sidero.dev/label: Hubble
 
 l2announcements:
   enabled: true
