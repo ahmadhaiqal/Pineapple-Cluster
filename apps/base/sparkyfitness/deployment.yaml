@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sparkyfitness-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sparkyfitness-server
+  template:
+    metadata:
+      labels:
+        app: sparkyfitness-server
+    spec:
+      securityContext:
+        fsGroup: 1000
+
+      containers:
+        - name: sparkyfitness-server
+          image: codewithcj/sparkyfitness_server:v0.16.9
+          ports:
+            - containerPort: 3010
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          volumeMounts:
+            - name: sparkyfitness-data
+              mountPath: /app/SparkyFitnessServer/uploads
+              subPath: uploads
+            - name: sparkyfitness-data
+              mountPath: /app/SparkyFitnessServer/backup
+              subPath: backup
+
+          envFrom:
+            - configMapRef:
+                name: sparkyfitness-configmap
+            - secretRef:
+                name: sparkyfitness-container-env
+
+      volumes:
+        - name: sparkyfitness-data
+          persistentVolumeClaim:
+            claimName: sparkyfitness-data-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sparkyfitness-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sparkyfitness-frontend
+  template:
+    metadata:
+      labels:
+        app: sparkyfitness-frontend
+    spec:
+      containers:
+        - name: sparkyfitness-frontend
+          image: codewithcj/sparkyfitness:v0.16.9
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          env:
+            - name: SPARKY_FITNESS_SERVER_HOST
+              value: sparkyfitness-server
+            - name: SPARKY_FITNESS_SERVER_PORT
+              value: "3010"
+
+          envFrom:
+            - configMapRef:
+                name: sparkyfitness-configmap

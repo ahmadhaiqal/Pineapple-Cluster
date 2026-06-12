@@ -1,0 +1,45 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sparkyfitness-db-production-cnpg-v1
+spec:
+  description: Postgres cluster for the sparkyfitness application
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+  instances: 1
+
+  monitoring:
+    enablePodMonitor: true
+
+  inheritedMetadata:
+    labels:
+      app: sparkyfitness-database
+      policy-type: "database"
+
+  storage:
+    size: 3Gi
+
+  postgresql:
+    shared_preload_libraries:
+      - pg_stat_statements
+
+  bootstrap:
+    initdb:
+      database: sparkyfitness_db
+      owner: sparky_admin
+      secret:
+        name: sparkyfitness-db-creds
+      # sparky_admin runs migrations and creates the restricted app user on
+      # first startup, which requires CREATEROLE (see upstream external-database doc)
+      postInitSQL:
+        - ALTER ROLE "sparky_admin" CREATEROLE
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        - CREATE EXTENSION IF NOT EXISTS "pgcrypto"
+        - CREATE EXTENSION IF NOT EXISTS "pg_stat_statements"
+        - GRANT ALL ON SCHEMA public TO "sparky_admin"
+        - GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "sparky_admin" WITH GRANT OPTION
+
+  # handy: resources can be used to trigger a redeploy
+  resources:
+    requests:
+      memory: 600Mi

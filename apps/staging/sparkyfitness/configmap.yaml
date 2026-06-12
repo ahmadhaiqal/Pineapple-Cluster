@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sparkyfitness-configmap
+data:
+  SPARKY_FITNESS_DB_HOST: "sparkyfitness-db.amdhql.org"
+  SPARKY_FITNESS_DB_PORT: "5432"
+  SPARKY_FITNESS_DB_NAME: sparkyfitness_db
+  SPARKY_FITNESS_FRONTEND_URL: "https://fitness.amdhql.org"
+  SPARKY_FITNESS_DISABLE_SIGNUP: "false"
+  SPARKY_FITNESS_LOG_LEVEL: ERROR
+  NODE_ENV: production
+  TZ: Asia/Kuala_Lumpur
+  PUID: "1000"
+  GUID: "1000"
