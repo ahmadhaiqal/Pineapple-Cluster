@@ -8,7 +8,7 @@ resources:
   - homarr
   - firefly-iii
   - navidrome
-  - stremio
+  # - stremio
   - jellyfin
   - qbittorrent
   # - comet
