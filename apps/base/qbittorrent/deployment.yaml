@@ -4,6 +4,9 @@ metadata:
   name: qbittorrent
 spec:
   replicas: 1
+  # single replica sharing RWO config PVC — never run old and new pod together
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: qbittorrent
@@ -54,6 +57,10 @@ spec:
               value: protonvpn
             - name: VPN_TYPE
               value: wireguard
+            # allow WebUI traffic in from the cluster (sonarr/radarr/cloudflared);
+            # gluetun's firewall drops all non-VPN inbound otherwise
+            - name: FIREWALL_INPUT_PORTS
+              value: "8080"
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:

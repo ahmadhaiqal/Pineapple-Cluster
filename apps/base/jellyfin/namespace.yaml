@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: jellyfin
+  labels:
+    # gluetun (qbittorrent VPN sidecar) needs NET_ADMIN, forbidden by Talos's
+    # cluster-wide "baseline" PodSecurity default
+    pod-security.kubernetes.io/enforce: privileged
