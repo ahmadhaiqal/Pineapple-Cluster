@@ -57,6 +57,8 @@ spec:
               value: protonvpn
             - name: VPN_TYPE
               value: wireguard
+            - name: WIREGUARD_ENDPOINT_PORT
+              value: "443"
             # allow WebUI traffic in from the cluster (sonarr/radarr/cloudflared);
             # gluetun's firewall drops all non-VPN inbound otherwise
             - name: FIREWALL_INPUT_PORTS
