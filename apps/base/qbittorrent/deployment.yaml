@@ -60,7 +60,11 @@ spec:
             # allow WebUI traffic in from the cluster (sonarr/radarr/cloudflared);
             # gluetun's firewall drops all non-VPN inbound otherwise
             - name: FIREWALL_INPUT_PORTS
-              value: "8080"
+              value: "8080,8888"
+            - name: HTTPPROXY
+              value: "on"
+            - name: HTTPPROXY_PORT
+              value: "8888"
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
