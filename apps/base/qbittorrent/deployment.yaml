@@ -56,9 +56,9 @@ spec:
             - name: VPN_SERVICE_PROVIDER
               value: protonvpn
             - name: VPN_TYPE
-              value: wireguard
-            - name: WIREGUARD_ENDPOINT_PORT
-              value: "443"
+              value: openvpn
+            - name: OPENVPN_PROTOCOL
+              value: tcp
             # allow WebUI traffic in from the cluster (sonarr/radarr/cloudflared);
             # gluetun's firewall drops all non-VPN inbound otherwise
             - name: FIREWALL_INPUT_PORTS
@@ -67,16 +67,16 @@ spec:
               value: "on"
             - name: HTTPPROXY_PORT
               value: "8888"
-            - name: WIREGUARD_PRIVATE_KEY
+            - name: OPENVPN_USER
               valueFrom:
                 secretKeyRef:
                   name: gluetun-vpn-credentials
-                  key: WIREGUARD_PRIVATE_KEY
-            - name: WIREGUARD_ADDRESSES
+                  key: OPENVPN_USER
+            - name: OPENVPN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: gluetun-vpn-credentials
-                  key: WIREGUARD_ADDRESSES
+                  key: OPENVPN_PASSWORD
 
         - name: qbittorrent
           image: lscr.io/linuxserver/qbittorrent:5.2.1_v2.0.13-ls460
