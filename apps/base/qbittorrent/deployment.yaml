@@ -59,6 +59,8 @@ spec:
               value: openvpn
             - name: OPENVPN_PROTOCOL
               value: tcp
+            - name: SERVER_CATEGORIES
+              value: free
             # allow WebUI traffic in from the cluster (sonarr/radarr/cloudflared);
             # gluetun's firewall drops all non-VPN inbound otherwise
             - name: FIREWALL_INPUT_PORTS
