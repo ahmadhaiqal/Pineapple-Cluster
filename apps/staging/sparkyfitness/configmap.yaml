@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: sparkyfitness-configmap
 data:
-  SPARKY_FITNESS_DB_HOST: "sparkyfitness-db.amdhql.org"
+  SPARKY_FITNESS_DB_HOST: "sparkyfitness-db-production-cnpg-v1-rw"
   SPARKY_FITNESS_DB_PORT: "5432"
   SPARKY_FITNESS_DB_NAME: sparkyfitness_db
   SPARKY_FITNESS_FRONTEND_URL: "https://fitness.amdhql.org"
