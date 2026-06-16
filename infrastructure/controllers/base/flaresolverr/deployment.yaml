@@ -19,9 +19,12 @@ spec:
 
       dnsPolicy: None
       dnsConfig:
+        # 1.1.1.1 intermittently drops queries for some indexer domains from
+        # this network (~30% timeout on 1337x.to); 8.8.8.8/9.9.9.9/8.8.4.4 are clean
         nameservers:
-          - 1.1.1.1
           - 8.8.8.8
+          - 9.9.9.9
+          - 8.8.4.4
         searches:
           - flaresolverr.svc.cluster.local
           - svc.cluster.local
