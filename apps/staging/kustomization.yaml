@@ -11,6 +11,7 @@ resources:
   # - stremio
   - jellyfin
   - qbittorrent
+  - rdt-client
   # - comet
   - prowlarr
   - sonarr

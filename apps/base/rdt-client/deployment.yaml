@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rdt-client
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rdt-client
+  template:
+    metadata:
+      labels:
+        app: rdt-client
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - urial-lab
+
+      containers:
+        - name: rdt-client
+          image: rogerfar/rdtclient:2.0.93
+          ports:
+            - containerPort: 6500
+              protocol: TCP
+
+          volumeMounts:
+            - name: rdt-client-config
+              mountPath: /data/db
+            - name: media
+              mountPath: /media
+
+      restartPolicy: Always
+
+      volumes:
+        - name: rdt-client-config
+          persistentVolumeClaim:
+            claimName: rdt-client-config-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-pvc

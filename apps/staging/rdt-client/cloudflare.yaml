@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared-rdt-client
+spec:
+  selector:
+    matchLabels:
+      app: cloudflared-rdt-client
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: cloudflared-rdt-client
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:2026.6.0
+          args:
+            - tunnel
+            - --protocol
+            - http2
+            - --config
+            - /etc/cloudflared/config/config.yaml
+            - run
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config
+              readOnly: true
+            - name: creds
+              mountPath: /etc/cloudflared/creds
+              readOnly: true
+      volumes:
+        - name: creds
+          secret:
+            secretName: tunnel-credentials-rdt-client
+        - name: config
+          configMap:
+            name: cloudflared-rdt-client
+            items:
+              - key: config.yaml
+                path: config.yaml
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-rdt-client
+data:
+  config.yaml: |
+    tunnel: rdt-client
+
+    credentials-file: /etc/cloudflared/creds/credentials.json
+
+    metrics: 0.0.0.0:2000
+    no-autoupdate: true
+
+    ingress:
+    - hostname: rdt-client.amdhql.org
+      service: http://rdt-client:6500
+
+    - service: http_status:404
