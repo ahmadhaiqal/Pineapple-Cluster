@@ -26,6 +26,20 @@ spec:
           - flaresolverr.svc.cluster.local
           - svc.cluster.local
           - cluster.local
+        options:
+          # split A/AAAA into separate sockets — avoids the conntrack race
+          # that drops one reply and causes intermittent ERR_NAME_NOT_RESOLVED
+          - name: single-request-reopen
+          # external hostnames have a dot — try them as-is, skip search-domain permutations
+          - name: ndots
+            value: "1"
+          # short per-query timeout + more attempts so a dropped packet retries
+          # well within Chrome's own DNS timeout instead of stalling 5s
+          - name: timeout
+            value: "2"
+          - name: attempts
+            value: "3"
+          - name: rotate
 
       containers:
         - name: flaresolverr
