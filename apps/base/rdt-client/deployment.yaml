@@ -35,7 +35,7 @@ spec:
             - name: rdt-client-config
               mountPath: /data/db
             - name: media
-              mountPath: /media
+              mountPath: /data
 
       restartPolicy: Always
 
