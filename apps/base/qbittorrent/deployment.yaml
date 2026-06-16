@@ -32,7 +32,7 @@ spec:
             - sh
             - -c
             - |
-              mkdir -p /data/torrents/movies /data/torrents/tv
+              mkdir -p /data/torrents/sonarr /data/torrents/radarr
               mkdir -p /config/qBittorrent
               if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then
                 printf '[Preferences]\nDownloads\\SavePath=/data/torrents/\nDownloads\\TempPath=/data/torrents/incomplete/\n' \

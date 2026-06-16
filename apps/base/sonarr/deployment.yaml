@@ -28,7 +28,7 @@ spec:
       initContainers:
         - name: init-dirs
           image: busybox:1.38.0
-          command: ["sh", "-c", "mkdir -p /data/media/tv /data/torrents/tv"]
+          command: ["sh", "-c", "mkdir -p /data/media/tv /data/torrents/sonarr"]
           volumeMounts:
             - name: data
               mountPath: /data
