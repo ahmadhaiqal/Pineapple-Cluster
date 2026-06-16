@@ -17,12 +17,22 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
 
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 1.1.1.1
+          - 8.8.8.8
+        searches:
+          - flaresolverr.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+
       containers:
         - name: flaresolverr
           image: ghcr.io/flaresolverr/flaresolverr:v3.5.0
           ports:
             - containerPort: 8191
-              protocal: TCP
+              protocol: TCP
 
           envFrom:
             - configMapRef:
@@ -30,4 +40,4 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
 
-      restartpolicy: Alyways
+      restartPolicy: Always
