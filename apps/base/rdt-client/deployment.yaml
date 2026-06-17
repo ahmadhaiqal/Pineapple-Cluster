@@ -14,6 +14,13 @@ spec:
       labels:
         app: rdt-client
     spec:
+      # Real-Debrid's download CDN (*.download.real-debrid.com) is IPv6-only and
+      # Cilium is single-stack v4, so a normal pod has no route to it. hostNetwork
+      # lets rdt-client use the node's own (now IPv6-capable) network stack to reach
+      # it. ClusterFirstWithHostNet keeps DNS pointed at CoreDNS. Namespace movietime
+      # is already PodSecurity 'privileged' (qbittorrent's gluetun needs NET_ADMIN).
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
