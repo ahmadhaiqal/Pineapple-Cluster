@@ -21,7 +21,11 @@ data:
             fallthrough in-addr.arpa ip6.arpa
             ttl 30
         }
-        forward . 1.1.1.1 8.8.8.8 {
+        # 1.1.1.1 intermittently drops queries for indexer/download domains from
+        # this network (~30% timeout on 1337x.to, 6/20 in per-resolver tests) — the
+        # source of prowlarr's ERR_NAME_NOT_RESOLVED and rdt-client connect failures.
+        # 8.8.8.8 / 9.9.9.9 / 8.8.4.4 all answered 20/20, so forward only to those.
+        forward . 8.8.8.8 9.9.9.9 8.8.4.4 {
            max_concurrent 1000
         }
         cache 30 {
