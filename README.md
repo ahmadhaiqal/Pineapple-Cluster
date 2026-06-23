@@ -84,8 +84,8 @@ flowchart TB
             direction LR
             PG1["firefly-db"]
             PG2["n8n-db"]
-            PG3["suwayomi-db"]
-            PG4["immich-db"]
+            PG3["immich-db"]
+            PG4["sparkyfitness-db"]
         end
 
         subgraph PLATFORM["⚙️ Platform Services"]
@@ -101,9 +101,9 @@ flowchart TB
             SONARR["📺 Sonarr\nTV Manager"]
             RADARR["🎬 Radarr\nMovie Manager"]
             PROWLARR["🔍 Prowlarr\nIndexer"]
-            QB["⬇️ qBittorrent\n+ Gluetun VPN"]
+            QB["⬇️ qBittorrent\nTorrent Client"]
+            RDT["☁️ rdt-client\nReal-Debrid"]
             SEERR["🔎 Seerr\nRequest Manager"]
-            STREMIO["📡 Stremio\nStream Server"]
         end
 
         subgraph APPS["📦 User Applications"]
@@ -115,6 +115,7 @@ flowchart TB
             FIREFLY["💰 Firefly III\nFinance"]
             LINK["🔖 Linkding\nBookmarks"]
             IMMICH["📷 Immich\nPhoto Gallery"]
+            SPARKY["🏋️ SparkyFitness\nFitness Tracker"]
         end
     end
 
@@ -145,17 +146,20 @@ flowchart TB
     %% App → DB
     FIREFLY --> PG1
     N8N --> PG2
-    SUWA --> PG3
-    IMMICH --> PG4
+    IMMICH --> PG3
+    SPARKY --> PG4
 
     %% Media stack wiring
     SEERR -. "Requests" .-> SONARR
     SEERR -. "Requests" .-> RADARR
     SONARR -. "Sends to" .-> QB
     RADARR -. "Sends to" .-> QB
+    SONARR -. "Sends to" .-> RDT
+    RADARR -. "Sends to" .-> RDT
     PROWLARR -. "Indexers" .-> SONARR
     PROWLARR -. "Indexers" .-> RADARR
     QB -. "Downloads" .-> JELLY
+    RDT -. "Downloads" .-> JELLY
 
     %% Inter-service
     FLARE -. "Proxy for scraping" .-> SUWA
@@ -196,10 +200,11 @@ flowchart TB
 | [Homarr](https://homarr.dev) | Homepage dashboard | — |
 | [Audiobookshelf](https://www.audiobookshelf.org) | Self-hosted audiobook server | — |
 | [Navidrome](https://www.navidrome.org) | Music streaming server | — |
-| [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) | Manga reader | PostgreSQL |
+| [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) | Manga reader | — |
 | [Firefly III](https://www.firefly-iii.org) | Personal finance manager | PostgreSQL |
 | [Linkding](https://github.com/sissbruecker/linkding) | Bookmark manager | — |
 | [Immich](https://immich.app) | Self-hosted photo & video gallery | PostgreSQL |
+| [SparkyFitness](https://github.com/CodeWithCJ/SparkyFitness) | Fitness & nutrition tracker | PostgreSQL |
 
 ## 🎬 Media Stack
 
@@ -209,9 +214,9 @@ flowchart TB
 | [Sonarr](https://sonarr.tv) | TV series manager | — |
 | [Radarr](https://radarr.video) | Movie manager | — |
 | [Prowlarr](https://github.com/Prowlarr/Prowlarr) | Indexer manager for Sonarr/Radarr | — |
-| [qBittorrent](https://www.qbittorrent.org) | Torrent client (via Gluetun VPN) | — |
+| [qBittorrent](https://www.qbittorrent.org) | Torrent download client | — |
+| [rdt-client](https://github.com/rogerfar/rdt-client) | Real-Debrid download client (Sonarr/Radarr) | — |
 | [Seerr](https://github.com/seerr/seerr) | Media request & discovery manager | — |
-| [Stremio](https://www.stremio.com) | Stream aggregator server | — |
 
 ## ⚙️ Platform Services
 
@@ -220,6 +225,16 @@ flowchart TB
 | [n8n](https://n8n.io) | Workflow automation engine |
 | [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | Cloudflare bypass proxy for scrapers |
 | [SpotDL](https://spotdl.readthedocs.io) | Spotify music downloader |
+
+## 💤 Currently Disabled
+
+These workloads exist in the repo but are commented out of their Kustomization (not reconciled to the cluster):
+
+| App | Reason |
+|---|---|
+| [Stremio](https://www.stremio.com) | Replaced by Jellyfin |
+| [Comet](https://github.com/g0ldyy/comet) | Inactive |
+| [CommaFeed](https://github.com/Athou/commafeed) | Inactive (RSS reader) |
 
 ---
 
