@@ -5,4 +5,3 @@ resources:
   - ../../base/radarr
   - cloudflare.yaml
   - cloudflare-secret.yaml
-

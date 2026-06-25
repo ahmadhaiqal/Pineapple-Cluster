@@ -3,6 +3,7 @@ extends: default
 
 ignore: |
   cluster/staging/flux-system/gotk-components.yaml
+  cluster/staging/flux-system/kustomization.yaml
 
 rules:
   line-length:

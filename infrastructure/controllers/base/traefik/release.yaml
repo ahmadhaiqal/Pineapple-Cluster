@@ -19,7 +19,7 @@ spec:
     service:
       type: LoadBalancer # or NodePort if no LB available
       labels:
-          cilium-lb-pool: pineapple-pool
+        cilium-lb-pool: pineapple-pool
     ingressClass:
       enabled: true
       isDefaultClass: true
