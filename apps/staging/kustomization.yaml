@@ -10,7 +10,6 @@ resources:
   - navidrome
   # - stremio
   - jellyfin
-  - qbittorrent
   - rdt-client
   # - comet
   - prowlarr

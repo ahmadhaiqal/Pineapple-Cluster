@@ -3,6 +3,6 @@ kind: Namespace
 metadata:
   name: jellyfin
   labels:
-    # gluetun (qbittorrent VPN sidecar) needs NET_ADMIN, forbidden by Talos's
-    # cluster-wide "baseline" PodSecurity default
+    # rdt-client runs with hostNetwork (to reach Real-Debrid's IPv6-only CDN),
+    # which is forbidden by Talos's cluster-wide "baseline" PodSecurity default.
     pod-security.kubernetes.io/enforce: privileged

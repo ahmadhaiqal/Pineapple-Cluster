@@ -18,7 +18,7 @@ spec:
       # Cilium is single-stack v4, so a normal pod has no route to it. hostNetwork
       # lets rdt-client use the node's own (now IPv6-capable) network stack to reach
       # it. ClusterFirstWithHostNet keeps DNS pointed at CoreDNS. Namespace movietime
-      # is already PodSecurity 'privileged' (qbittorrent's gluetun needs NET_ADMIN).
+      # is labelled PodSecurity 'privileged', which hostNetwork requires.
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       affinity:
