@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: monitoring
+  labels:
+    # node-exporter (DaemonSet) needs hostNetwork/hostPID/hostPath/hostPort,
+    # all forbidden by Talos's cluster-wide "baseline" PodSecurity default.
+    pod-security.kubernetes.io/enforce: privileged
