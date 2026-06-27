@@ -55,15 +55,18 @@ spec:
       enabled: true
 
     server:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - urial-lab
+      # bjw-s common-lib pins pods via defaultPodOptions.affinity, not a
+      # top-level affinity key (which the chart silently ignores).
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - urial-lab
       # immich-server previously ran with no resources (BestEffort QoS), making
       # it the first pod the kernel OOM-kills under node memory pressure
       # (observed exitCode 137). A memory request moves it to Burstable QoS so
@@ -79,12 +82,13 @@ spec:
                   memory: 4Gi
 
     machine-learning:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                      - urial-lab
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: In
+                      values:
+                        - urial-lab
