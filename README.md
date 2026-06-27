@@ -227,8 +227,6 @@ These workloads exist in the repo but are commented out of their Kustomization (
 
 | App | Reason |
 |---|---|
-| [Stremio](https://www.stremio.com) | Replaced by Jellyfin |
-| [Comet](https://github.com/g0ldyy/comet) | Inactive |
 | [CommaFeed](https://github.com/Athou/commafeed) | Inactive (RSS reader) |
 
 ---
