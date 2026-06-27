@@ -101,7 +101,6 @@ flowchart TB
             SONARR["📺 Sonarr\nTV Manager"]
             RADARR["🎬 Radarr\nMovie Manager"]
             PROWLARR["🔍 Prowlarr\nIndexer"]
-            QB["⬇️ qBittorrent\nTorrent Client"]
             RDT["☁️ rdt-client\nReal-Debrid"]
             SEERR["🔎 Seerr\nRequest Manager"]
         end
@@ -152,13 +151,10 @@ flowchart TB
     %% Media stack wiring
     SEERR -. "Requests" .-> SONARR
     SEERR -. "Requests" .-> RADARR
-    SONARR -. "Sends to" .-> QB
-    RADARR -. "Sends to" .-> QB
     SONARR -. "Sends to" .-> RDT
     RADARR -. "Sends to" .-> RDT
     PROWLARR -. "Indexers" .-> SONARR
     PROWLARR -. "Indexers" .-> RADARR
-    QB -. "Downloads" .-> JELLY
     RDT -. "Downloads" .-> JELLY
 
     %% Inter-service
@@ -214,7 +210,6 @@ flowchart TB
 | [Sonarr](https://sonarr.tv) | TV series manager | — |
 | [Radarr](https://radarr.video) | Movie manager | — |
 | [Prowlarr](https://github.com/Prowlarr/Prowlarr) | Indexer manager for Sonarr/Radarr | — |
-| [qBittorrent](https://www.qbittorrent.org) | Torrent download client | — |
 | [rdt-client](https://github.com/rogerfar/rdt-client) | Real-Debrid download client (Sonarr/Radarr) | — |
 | [Seerr](https://github.com/seerr/seerr) | Media request & discovery manager | — |
 
