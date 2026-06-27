@@ -64,6 +64,19 @@ spec:
                     operator: In
                     values:
                       - urial-lab
+      # immich-server previously ran with no resources (BestEffort QoS), making
+      # it the first pod the kernel OOM-kills under node memory pressure
+      # (observed exitCode 137). A memory request moves it to Burstable QoS so
+      # it is far less likely to be the OOM victim; the limit caps worst-case use.
+      controllers:
+        main:
+          containers:
+            main:
+              resources:
+                requests:
+                  memory: 1Gi
+                limits:
+                  memory: 4Gi
 
     machine-learning:
       affinity:
