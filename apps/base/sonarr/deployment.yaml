@@ -23,7 +23,7 @@ spec:
                       - urial-lab
 
       securityContext:
-        fsGroup: 1000
+        fsGroup: 911
 
       initContainers:
         - name: init-dirs
@@ -42,9 +42,9 @@ spec:
 
           env:
             - name: PUID
-              value: "1000"
+              value: "911"
             - name: PGID
-              value: "1000"
+              value: "911"
             - name: TZ
               value: "Asia/Kuala_Lumpur"
 
