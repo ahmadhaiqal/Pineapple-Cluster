@@ -5,6 +5,11 @@ metadata:
   namespace: immich
 spec:
   interval: 30m
+  # immich-server can be slow to become ready (DB migrations, occasional OOM
+  # restart), which exceeds Helm's 5m default and previously left the release
+  # stuck in a terminal Stalled state. Give upgrades more time and let
+  # helm-controller retry + rollback instead of giving up after one attempt.
+  timeout: 15m
   chart:
     spec:
       chart: immich
@@ -16,6 +21,12 @@ spec:
       interval: 12h
   install:
     createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
   values:
     immich:
       persistence:
