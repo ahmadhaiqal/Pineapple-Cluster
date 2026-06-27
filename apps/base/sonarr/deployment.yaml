@@ -41,6 +41,10 @@ spec:
               protocol: TCP
 
           env:
+            # Must be 911 (not 1000): the shared media-pvc tree is owned by 911
+            # (created by rdt-client). Mismatched UID -> imports into
+            # /data/media/tv fail with UnauthorizedAccessException and never
+            # reach Jellyfin. Keep PUID/PGID/fsGroup aligned at 911.
             - name: PUID
               value: "911"
             - name: PGID
