@@ -12,17 +12,45 @@ spec:
       labels:
         app: navidrome
     spec:
+      # media-pvc is RWO Longhorn attached on urial-lab — every pod that
+      # mounts it must land on the same node.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - urial-lab
+
+      # Read-only consumer of the media tree, so UID 1000 is fine here
+      # (tree is 2775/world-readable); only writers must be 911.
       securityContext:
         fsGroup: 1000
         runAsUser: 1000
         runAsGroup: 1000
+
+      # Guarantee /data/media/music exists before the main container's
+      # subPath mount resolves (spotdl's 3am cron may not have run yet).
+      # Runs as 911 so the dir is writable by spotdl.
+      initContainers:
+        - name: init-dirs
+          image: busybox:1.38.0
+          command: ["sh", "-c", "mkdir -p /data/media/music"]
+          securityContext:
+            runAsUser: 911
+            runAsGroup: 911
+          volumeMounts:
+            - name: navidrome-music
+              mountPath: /data
 
       containers:
         - name: navidrome
           image: deluan/navidrome:pr-4713
           ports:
             - containerPort: 4533
-              protocal: TCP
+              protocol: TCP
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -31,7 +59,9 @@ spec:
             - name: navidrome-data
               mountPath: /data
             - name: navidrome-music
-              mountPath: /music:ro
+              mountPath: /music
+              subPath: media/music
+              readOnly: true
 
       restartPolicy: Always
 
@@ -41,4 +71,4 @@ spec:
             claimName: navidrome-data-pvc
         - name: navidrome-music
           persistentVolumeClaim:
-            claimName: navidrome-music-pvc
+            claimName: media-pvc

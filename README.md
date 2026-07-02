@@ -195,7 +195,6 @@ flowchart TB
 |---|---|---|
 | [Homarr](https://homarr.dev) | Homepage dashboard | — |
 | [Audiobookshelf](https://www.audiobookshelf.org) | Self-hosted audiobook server | — |
-| [Navidrome](https://www.navidrome.org) | Music streaming server | — |
 | [Suwayomi](https://github.com/Suwayomi/Suwayomi-Server) | Manga reader | — |
 | [Firefly III](https://www.firefly-iii.org) | Personal finance manager | PostgreSQL |
 | [Linkding](https://github.com/sissbruecker/linkding) | Bookmark manager | — |
@@ -212,6 +211,8 @@ flowchart TB
 | [Prowlarr](https://github.com/Prowlarr/Prowlarr) | Indexer manager for Sonarr/Radarr | — |
 | [rdt-client](https://github.com/rogerfar/rdt-client) | Real-Debrid download client (Sonarr/Radarr) | — |
 | [Seerr](https://github.com/seerr/seerr) | Media request & discovery manager | — |
+| [Navidrome](https://www.navidrome.org) | Music streaming server | — |
+| [SpotDL](https://spotdl.readthedocs.io) | Spotify music downloader (CronJob onto shared media PVC) | — |
 
 ## ⚙️ Platform Services
 
@@ -219,7 +220,6 @@ flowchart TB
 |---|---|
 | [n8n](https://n8n.io) | Workflow automation engine |
 | [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | Cloudflare bypass proxy for scrapers |
-| [SpotDL](https://spotdl.readthedocs.io) | Spotify music downloader |
 
 ## 💤 Currently Disabled
 
