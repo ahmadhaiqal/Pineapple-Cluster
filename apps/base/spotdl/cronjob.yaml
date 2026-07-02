@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: spotdl-sync
+spec:
+  schedule: "0 3 * * *" # every day at 3am
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 10800 # kill after 3 hours (prevents pile-up when rate-limited)
+      template:
+        spec:
+          # media-pvc is RWO Longhorn attached on urial-lab — every pod that
+          # mounts it must land on the same node.
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - urial-lab
+
+          # Writes into the shared movietime media tree, so it must be 911
+          # (see CLAUDE.md) — do not copy the 1000 from apps elsewhere.
+          securityContext:
+            runAsUser: 911
+            runAsGroup: 911
+            fsGroup: 911
+
+          initContainers:
+            - name: init-dirs
+              image: busybox:1.38.0
+              command: ["sh", "-c", "mkdir -p /data/media/music"]
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+
+          containers:
+            - name: spotdl
+              # The v4.5.0 tag is broken (Alpine/musl image ships a glibc-linked
+              # tls-client lib -> "libresolv.so.2 not found"); fixed post-release,
+              # so pin nightly by digest. Move to the next stable tag when cut.
+              image: spotdl/spotify-downloader:nightly@sha256:1f6a0f63b55f983746d21a2b65e7f52a0e92052ba042fdf6af7e34022f4f585d
+              imagePullPolicy: IfNotPresent
+              env:
+                # UID 911 has no passwd entry in this image; spotdl needs a
+                # writable $HOME for its cache.
+                - name: HOME
+                  value: /tmp
+              # v4.5.0: no /app/.venv — the image entrypoint is `uv run ... spotdl`,
+              # replicated here so the playlist loop still works. Default audio
+              # provider (ytmusic via yt-dlp) replaces the dead `piped` fallback.
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  while IFS= read -r line; do
+                    [ -z "$line" ] && continue
+                    uv run --project /app --no-dev --frozen --no-sync \
+                      spotdl --output /data/media/music download "$line"
+                  done < /config/playlist.txt
+
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: config
+                  mountPath: /config
+          restartPolicy: OnFailure
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: media-pvc
+            - name: config
+              configMap:
+                name: spotdl-playlists

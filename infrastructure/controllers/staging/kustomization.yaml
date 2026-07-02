@@ -7,6 +7,5 @@ resources:
   - flaresolverr
   - cilium
   - external-dns
-  - spotdl
   - n8n
   - immich
