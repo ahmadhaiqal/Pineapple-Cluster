@@ -53,15 +53,42 @@ spec:
               # v4.5.0: no /app/.venv — the image entrypoint is `uv run ... spotdl`,
               # replicated here so the playlist loop still works. Default audio
               # provider (ytmusic via yt-dlp) replaces the dead `piped` fallback.
+              #
+              # `sync` (not `download`) mirrors each Spotify playlist: first run
+              # downloads everything and records the track list in a .spotdl
+              # save file; later runs re-fetch the playlist, download additions,
+              # and DELETE local files for removed tracks. spotdl refuses
+              # --save-file together with a .spotdl query, hence the if/else.
+              #
+              # Everything is relative to the music root (cd below) on purpose:
+              # the same output template is written into the .m3u8, so entries
+              # stay relative and resolve inside Navidrome too, which mounts
+              # this dir at /music and auto-imports the .m3u8 files as
+              # playlists (Spotify order preserved, updated on every scan).
+              # Per-playlist folders keep sync deletions from clobbering a
+              # song that another playlist still references.
               command:
                 - /bin/sh
                 - -c
                 - |
-                  while IFS= read -r line; do
-                    [ -z "$line" ] && continue
-                    uv run --project /app --no-dev --frozen --no-sync \
-                      spotdl --output /data/media/music download "$line"
+                  cd /data/media/music
+                  mkdir -p .spotdl
+                  fail=0
+                  while IFS= read -r url; do
+                    [ -z "$url" ] && continue
+                    id=$(basename "$url" | cut -d'?' -f1)
+                    save=".spotdl/$id.spotdl"
+                    if [ -f "$save" ]; then
+                      set -- sync "$save"
+                    else
+                      set -- --save-file "$save" sync "$url"
+                    fi
+                    uv run --project /app --no-dev --frozen --no-sync spotdl \
+                      --output "{list-name}/{artists} - {title}.{output-ext}" \
+                      --m3u "{list}.m3u8" \
+                      "$@" || { echo "sync failed for $url"; fail=1; }
                   done < /config/playlist.txt
+                  exit $fail
 
               volumeMounts:
                 - name: data

@@ -212,7 +212,7 @@ flowchart TB
 | [rdt-client](https://github.com/rogerfar/rdt-client) | Real-Debrid download client (Sonarr/Radarr) | — |
 | [Seerr](https://github.com/seerr/seerr) | Media request & discovery manager | — |
 | [Navidrome](https://www.navidrome.org) | Music streaming server | — |
-| [SpotDL](https://spotdl.readthedocs.io) | Spotify music downloader (CronJob onto shared media PVC) | — |
+| [SpotDL](https://spotdl.readthedocs.io) | Spotify playlist mirror (CronJob; syncs adds/removals and exports .m3u8 playlists Navidrome auto-imports) | — |
 
 ## ⚙️ Platform Services
 
