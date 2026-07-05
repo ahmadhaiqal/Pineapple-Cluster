@@ -52,6 +52,14 @@ spec:
             - containerPort: 4533
               protocol: TCP
 
+          env:
+            # spotdl's CronJob writes one <playlist>.m3u8 per Spotify playlist
+            # into the music root; auto-import turns each into a Navidrome
+            # playlist that follows the file on every scan (order + removals).
+            # true is the default — set explicitly because spotdl relies on it.
+            - name: ND_AUTOIMPORTPLAYLISTS
+              value: "true"
+
           securityContext:
             allowPrivilegeEscalation: false
 
