@@ -4,6 +4,10 @@ metadata:
   name: renovate-configmap
   namespace: renovate
 data:
+  # Pods have no IPv6 egress (Cilium is single-stack v4) but CoreDNS returns
+  # AAAA records first, so Node.js dials v6, times out on index.docker.io and
+  # Renovate aborts the whole run with external-host-error.
+  NODE_OPTIONS: "--dns-result-order=ipv4first"
   RENOVATE_AUTODISCOVER: "false"
   RENOVATE_GIT_AUTHOR: "Haiqal's Renovate Bot <bot@renovateapp.com>"
   RENOVATE_PLATFORM: "github"
