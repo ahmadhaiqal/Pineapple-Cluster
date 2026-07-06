@@ -92,7 +92,6 @@ flowchart TB
             direction LR
             N8N["🔧 n8n\nAutomation"]
             FLARE["🛡 FlareSolverr\nCF Bypass"]
-            SPOTDL["🎶 SpotDL\nSpotify DL"]
         end
 
         subgraph MEDIA["🎬 Media Stack (urial-lab)"]
@@ -103,6 +102,7 @@ flowchart TB
             PROWLARR["🔍 Prowlarr\nIndexer"]
             RDT["☁️ rdt-client\nReal-Debrid"]
             SEERR["🔎 Seerr\nRequest Manager"]
+            SPOTDL["🎶 SpotDL\nSpotify Sync"]
         end
 
         subgraph APPS["📦 User Applications"]
@@ -156,6 +156,7 @@ flowchart TB
     PROWLARR -. "Indexers" .-> SONARR
     PROWLARR -. "Indexers" .-> RADARR
     RDT -. "Downloads" .-> JELLY
+    SPOTDL -. "Playlists + .m3u8" .-> NAVI
 
     %% Inter-service
     FLARE -. "Proxy for scraping" .-> SUWA
@@ -236,6 +237,14 @@ These workloads exist in the repo but are commented out of their Kustomization (
 - Prometheus Operator via `kube-prometheus-stack`
 - Dashboards in Grafana
 - Alerting via Alertmanager
+
+---
+
+## 🧰 Scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/homarr-seed.py` | Seeds the Homarr dashboard (apps, layout) via its REST API — Homarr boards live in its database, not in Git, so this script makes the dashboard reproducible. Run it against a port-forward, not the Cloudflare tunnel. |
 
 ---
 
