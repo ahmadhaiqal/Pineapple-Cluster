@@ -22,4 +22,14 @@ spec:
                 - configMapRef:
                     name: renovate-configmap
 
+              # Unbounded (BestEffort) Renovate OOMed urial-lab on 2026-07-06:
+              # Talos OOMController SIGKILLed neighbouring pods and Longhorn
+              # volumes degraded. Keep the kill inside this container.
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+                limits:
+                  memory: 3Gi
+
           restartPolicy: Never
