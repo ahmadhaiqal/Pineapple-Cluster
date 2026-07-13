@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: spotdl-sync
 spec:
-  schedule: "0 3 * * *" # every day at 3am MYT
+  schedule: "0 9 30 * *" # every day at 3am MYT
   timeZone: Asia/Kuala_Lumpur
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
