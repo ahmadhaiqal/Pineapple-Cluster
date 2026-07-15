@@ -59,7 +59,7 @@ spec:
     spec:
       containers:
         - name: sparkyfitness-frontend
-          image: codewithcj/sparkyfitness:v0.17.2
+          image: codewithcj/sparkyfitness:v0.17.3
           ports:
             - containerPort: 80
               protocol: TCP
