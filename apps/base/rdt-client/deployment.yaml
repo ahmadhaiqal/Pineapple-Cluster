@@ -33,7 +33,7 @@ spec:
 
       containers:
         - name: rdt-client
-          image: rogerfar/rdtclient:2.0.139
+          image: rogerfar/rdtclient:2.0.140
           ports:
             - containerPort: 6500
               protocol: TCP
