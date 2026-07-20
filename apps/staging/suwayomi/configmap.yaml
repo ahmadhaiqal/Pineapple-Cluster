@@ -7,3 +7,8 @@ data:
   TZ: "Etc/UTC"
   FLARESOLVERR_ENABLED: "true"
   FLARESOLVERR_URL: "http://flaresolverr.amdhql.org:8191"
+  # The image launches `java -jar ...` with no heap flag, so the JVM sizes its
+  # heap to a % of visible RAM. With no container limit it saw the whole node
+  # and ballooned to ~865Mi. The JVM auto-honors JAVA_TOOL_OPTIONS, so cap the
+  # heap here; the deployment's memory limit is the hard backstop.
+  JAVA_TOOL_OPTIONS: "-Xmx512m"

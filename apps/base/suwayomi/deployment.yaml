@@ -27,6 +27,16 @@ spec:
             - configMapRef:
                 name: suwayomi-configmap
 
+          # JVM heap is capped via JAVA_TOOL_OPTIONS=-Xmx512m (configmap). This
+          # limit is the hard backstop: 896Mi leaves headroom for JVM non-heap
+          # (metaspace, threads, direct buffers, code cache) above the 512Mi heap.
+          resources:
+            requests:
+              cpu: 25m
+              memory: 256Mi
+            limits:
+              memory: 896Mi
+
           securityContext:
             allowPrivilegeEscalation: false
 
