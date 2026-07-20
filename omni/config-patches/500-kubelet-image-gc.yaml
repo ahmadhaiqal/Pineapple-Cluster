@@ -1,0 +1,27 @@
+# Talos machine-config patch applied via Sidero Omni (NOT reconciled by FluxCD).
+# Apply/update with:  omnictl apply -f omni/config-patches/500-kubelet-image-gc.yaml
+#
+# Purpose: lower the kubelet image-garbage-collection thresholds so unused
+# container images are reclaimed. Renovate bumps image tags/digests constantly
+# (spotdl:nightly, etc.); each new pull orphans the old layers. The Talos
+# default thresholds (high 85% / low 80%) never fired because urial-lab's
+# ephemeral partition sat at ~81% — just under the trigger — so ~546 GiB of
+# orphaned image layers (2255 image refs) accumulated. Lowering high→70/low→45
+# lets kubelet auto-prune unused images; in-use images are never touched.
+# Scoped cluster-wide (harmless to hippo-lab at ~6% usage).
+metadata:
+    namespace: default
+    type: ConfigPatches.omni.sidero.dev
+    id: 500-kubelet-image-gc
+    labels:
+        omni.sidero.dev/cluster: Talos-Pineapple
+    annotations:
+        name: kubelet image GC threshold
+        description: Reclaim orphaned container images from Renovate tag churn. Default 85/80 never fired at 81% disk on urial-lab.
+spec:
+    data: |
+        machine:
+          kubelet:
+            extraConfig:
+              imageGCHighThresholdPercent: 70
+              imageGCLowThresholdPercent: 45
