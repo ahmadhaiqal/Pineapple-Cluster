@@ -1,0 +1,6 @@
+# Talos kubelet serving certs are self-signed, so metrics-server cannot verify
+# them over TLS. --kubelet-insecure-tls skips that verification (standard for
+# Talos). This is appended to the chart's defaultArgs (kubelet-preferred-
+# address-types=InternalIP,..., kubelet-use-node-status-port, metric-resolution=15s).
+args:
+  - --kubelet-insecure-tls
