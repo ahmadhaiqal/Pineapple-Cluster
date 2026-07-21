@@ -5,6 +5,6 @@ metadata:
 data:
   WEBHOOK_URL: "https://automation.amdhql.org"
   DB_TYPE: postgresdb
-  DB_POSTGRESDB_HOST: "n8n-db.amdhql.org"
+  DB_POSTGRESDB_HOST: "n8n-db-production-cnpg-v1-rw"
   DB_POSTGRESDB_PORT: "5432"
   DB_POSTGRESDB_SCHEMA: public
