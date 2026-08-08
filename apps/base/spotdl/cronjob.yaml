@@ -44,7 +44,7 @@ spec:
               # The v4.5.0 tag is broken (Alpine/musl image ships a glibc-linked
               # tls-client lib -> "libresolv.so.2 not found"); fixed post-release,
               # so pin nightly by digest. Move to the next stable tag when cut.
-              image: spotdl/spotify-downloader:nightly@sha256:a70fd9645dce66c8c9732b48e0683d2ef695a71417dfc572fd89f06ef5ed8caf
+              image: spotdl/spotify-downloader:nightly@sha256:3bce08e1eae1fc0762daadd2d5c09043aaec31601a04f6ad7995332504c5202a
               imagePullPolicy: IfNotPresent
               env:
                 # UID 911 has no passwd entry in this image; spotdl needs a
