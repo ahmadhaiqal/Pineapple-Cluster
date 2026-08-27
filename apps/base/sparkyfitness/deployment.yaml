@@ -17,7 +17,7 @@ spec:
 
       containers:
         - name: sparkyfitness-server
-          image: codewithcj/sparkyfitness_server:v1.6.2
+          image: codewithcj/sparkyfitness_server:v1.6.4
           ports:
             - containerPort: 3010
               protocol: TCP
