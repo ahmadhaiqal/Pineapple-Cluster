@@ -27,15 +27,19 @@ spec:
             - configMapRef:
                 name: suwayomi-configmap
 
-          # JVM heap is capped via JAVA_TOOL_OPTIONS=-Xmx512m (configmap). This
-          # limit is the hard backstop: 896Mi leaves headroom for JVM non-heap
-          # (metaspace, threads, direct buffers, code cache) above the 512Mi heap.
+          # JVM heap is capped via JAVA_TOOL_OPTIONS=-Xmx512m (configmap), and
+          # KCEF_ENABLED=false there drops the embedded Chromium + Xvfb (~430Mi
+          # of native RSS that -Xmx cannot bound). With KCEF off the pod settles
+          # around 300-400Mi; 640Mi is the hard backstop, leaving room for JVM
+          # non-heap (metaspace, threads, direct buffers, code cache) on top of
+          # the 512Mi heap. Request reflects real steady-state -- 256Mi
+          # understated it badly and skewed scheduling on a 2-node cluster.
           resources:
             requests:
               cpu: 25m
-              memory: 256Mi
+              memory: 384Mi
             limits:
-              memory: 896Mi
+              memory: 640Mi
 
           securityContext:
             allowPrivilegeEscalation: false
