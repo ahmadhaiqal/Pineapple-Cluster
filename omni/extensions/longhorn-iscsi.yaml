@@ -1,0 +1,38 @@
+# Talos system extensions for the `Talos-Pineapple` cluster, managed by Sidero
+# Omni. NOT a machine-config patch and NOT reconciled by FluxCD — extensions
+# are baked into the Talos installer image by the Image Factory, and Omni
+# selects them per machine set.
+#
+# ⚠️ REFERENCE / RECONSTRUCTED — read before applying.
+# These extensions are ALREADY LIVE on both nodes (verified 2026-09-18 with
+# `talosctl -n <node> get extensions`); the live schematic ID is
+# 6dd31f0133991c32887f7df9dda974ec4a072e110db0336f5e01a4b9b19aefd5 on Talos
+# v1.13.3. This file records that state so it survives losing Omni; it has not
+# been round-tripped against the live Omni resource, because the local omnictl
+# (1.8.2) is older than the backend (1.12.1) and cannot talk to it. Upgrade
+# omnictl and diff against `omnictl get extensionsconfiguration` before
+# applying, or you risk replacing the live selection.
+#
+# What they are for:
+#   iscsi-tools       — open-iscsi + iscsiadm. HARD REQUIREMENT for Longhorn:
+#                       its v1 data engine attaches every volume as an iSCSI
+#                       device. Without it, no Longhorn volume can attach and
+#                       every PVC in apps/ and databases/ stays unbound.
+#   util-linux-tools  — provides fstrim, used by Longhorn filesystem trim to
+#                       reclaim space from deleted blocks inside volumes.
+#
+# Apply with an authenticated omnictl:
+#   omnictl apply -f omni/extensions/longhorn-iscsi.yaml
+metadata:
+    namespace: default
+    type: ExtensionsConfigurations.omni.sidero.dev
+    id: longhorn-iscsi
+    labels:
+        omni.sidero.dev/cluster: Talos-Pineapple
+    annotations:
+        name: Longhorn iSCSI extensions
+        description: iscsi-tools and util-linux-tools, required by the Longhorn v1 data engine.
+spec:
+    extensions:
+        - siderolabs/iscsi-tools
+        - siderolabs/util-linux-tools
