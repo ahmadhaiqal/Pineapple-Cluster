@@ -4,3 +4,9 @@ CLAUDE.md
 .claude/settings.local.json
 graphify-out/
 .claude/skills/graphify/
+
+# talhelper — rendered Talos machine configs contain the cluster CA in plaintext
+talos/clusterconfig/
+talos/talsecret.yaml
+talos/talsecret.yml
+talos/.tmp/

@@ -1,0 +1,16 @@
+# Live in Omni as two identical machine-scoped patches:
+#   500-64408c87-4ddb-4d3a-9452-09e94f6928c9  "V2 Data Engine"  (urial-lab)
+#   500-73dcf9a9-63bd-46f0-b2ff-abc63766133d  "V2 Data Engine"  (hippo-lab)
+#
+# Prerequisites for the Longhorn v2 (SPDK) data engine: 1024 hugepages and the
+# nvme_tcp / vfio_pci kernel modules. NOTE: the v2 engine is NOT actually
+# enabled in the Longhorn HelmRelease — every volume runs on the v1 engine.
+# This reserves 2 GiB of RAM per node for nothing. Kept here to match live
+# state exactly; see talos/README.md before dropping it.
+machine:
+  sysctls:
+    vm.nr_hugepages: "1024"
+  kernel:
+    modules:
+      - name: nvme_tcp
+      - name: vfio_pci

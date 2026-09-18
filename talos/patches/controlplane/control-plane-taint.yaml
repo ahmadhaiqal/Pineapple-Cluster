@@ -1,0 +1,13 @@
+# Live in Omni as machine-scoped patch 500-a29dd9bc-044a-43c9-9a01-d28e48fb005e
+# ("enable control plane schedule" — the name is misleading; it does the
+# opposite). Keeps hippo-lab tainted NoSchedule so workloads stay on urial-lab.
+#
+# Talos already applies this taint whenever
+# `cluster.allowSchedulingOnControlPlanes` is false (which is talhelper's
+# default, and what talconfig.yaml sets), so this patch is redundant in a
+# talhelper world. Kept as an explicit record of live state — safe to drop once
+# the rendered config is diffed and the taint is confirmed present without it.
+machine:
+  kubelet:
+    extraArgs:
+      register-with-taints: node-role.kubernetes.io/control-plane=:NoSchedule

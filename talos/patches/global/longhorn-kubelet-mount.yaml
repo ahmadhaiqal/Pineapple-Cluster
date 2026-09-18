@@ -1,0 +1,16 @@
+# Live in Omni as two identical machine-scoped patches:
+#   500-f70d4167-7400-4f2f-ab82-d616c76522e2  "Data Path Mounts"  (urial-lab)
+#   500-36361ff9-2072-463b-b18f-6e4e2779fde6  "Data Path mounts"  (hippo-lab)
+# Longhorn's CSI driver stages volumes under /var/lib/longhorn and the kubelet
+# must see that path with shared mount propagation, or every `longhorn` PVC
+# fails to mount. Pairs with the iscsi-tools extension in talconfig.yaml.
+machine:
+  kubelet:
+    extraMounts:
+      - destination: /var/lib/longhorn
+        type: bind
+        source: /var/lib/longhorn
+        options:
+          - bind
+          - rshared
+          - rw

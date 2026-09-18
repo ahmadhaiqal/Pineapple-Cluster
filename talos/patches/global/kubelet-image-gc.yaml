@@ -1,0 +1,8 @@
+# Live in Omni as cluster-wide patch 500-kubelet-image-gc.
+# Talos defaults (85/80) never fired at urial-lab's steady ~81% ephemeral
+# usage, so ~546 GiB of image layers orphaned by Renovate tag churn piled up.
+machine:
+  kubelet:
+    extraConfig:
+      imageGCHighThresholdPercent: 70
+      imageGCLowThresholdPercent: 45

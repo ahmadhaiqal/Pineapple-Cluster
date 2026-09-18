@@ -1,0 +1,10 @@
+# Live in Omni as two identical machine-scoped patches:
+#   500-3c1648d3-8715-4099-a3a0-cb6e69121cca  "Fix NTF Server Time"  (urial-lab)
+#   500-4dc7c471-b886-4d55-af84-a05871979c31  "Correct NTP Server"   (hippo-lab)
+# Identical on both nodes, so collapsed into one cluster-wide patch here.
+machine:
+  time:
+    servers:
+      - time.cloudflare.com
+      - time.google.com
+      - pool.ntp.org
