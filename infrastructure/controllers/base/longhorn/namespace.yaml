@@ -1,0 +1,12 @@
+# Longhorn runs privileged: it bind-mounts host paths, drives iSCSI and manages
+# block devices, so the namespace must be exempt from the PodSecurity baseline.
+# These labels mirror what is already live (set by the original `helm install`).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn-system
+  labels:
+    name: longhorn-system
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

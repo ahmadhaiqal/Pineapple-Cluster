@@ -1,0 +1,31 @@
+# Longhorn — the cluster's default StorageClass and the backing store for every
+# `storageClassName: longhorn` PVC in apps/ and databases/.
+#
+# ADOPTION NOTE: Longhorn was originally installed out-of-band with the Helm
+# CLI (release `longhorn` in `longhorn-system`, revision 1, chart 1.9.0, no
+# custom values). `releaseName: longhorn` makes helm-controller take over that
+# same release rather than create a second one.
+#
+# ⚠️ UPGRADES ARE NOT FREE-FOR-ALL: Longhorn only supports sequential minor
+# version upgrades (1.9 → 1.10 → 1.11 → 1.12). Do NOT merge a Renovate PR that
+# jumps two or more minors in one step — bump one minor at a time, wait for all
+# volumes to report Healthy, then take the next. Read the release notes first;
+# some minors require a v1 → v2 data-engine or CRD migration step.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+spec:
+  interval: 1h
+  releaseName: longhorn
+  chart:
+    spec:
+      chart: longhorn
+      version: "1.9.0" # sequential minors only — see note above
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+        namespace: longhorn-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: longhorn-values
