@@ -1,0 +1,129 @@
+# Nightly logical backup of the n8n database to Cloudflare R2.
+#
+# Deliberately NOT CNPG's built-in backup: spec.backup.barmanObjectStore is
+# removed in CloudNativePG 1.31.0, and the replacement barman-cloud plugin
+# requires cert-manager, which this cluster does not run. These four databases
+# total ~291 MB, so a nightly pg_dump is proportionate. The trade-off is
+# granularity: this recovers to the last nightly run, not to an arbitrary
+# point in time.
+#
+# Endpoint and bucket are filled in by scripts/seed-r2-secret.sh, which
+# validates the credentials against R2 before writing anything.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: n8n-db-backup
+spec:
+  schedule: "30 2 * * *"          # staggered so the four do not contend
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600   # still run if the node was down at 02:00
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          # Satisfies PodSecurity "restricted", not just the "baseline" this
+          # cluster enforces today. fsGroup is what lets both containers share
+          # the emptyDir as a non-root user.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          volumes:
+            - name: work
+              emptyDir:
+                sizeLimit: 2Gi
+          # The dump runs to completion before the upload container starts.
+          initContainers:
+            - name: dump
+              # pg_dump must be >= the server. This cluster runs a mix of
+              # 16.1 and 16.14, so every job uses the newest 16.x client;
+              # an older client against a newer server is what breaks.
+              image: ghcr.io/cloudnative-pg/postgresql:16
+              env:
+                - name: PGHOST
+                  value: n8n-db-production-cnpg-v1-rw
+                - name: PGDATABASE
+                  value: n8n
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: n8n-db-creds
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: n8n-db-creds
+                      key: password
+              command: ["bash", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  out="/work/n8n-$(date -u +%Y%m%dT%H%M%SZ).dump"
+                  pg_dump -Fc --no-owner --no-acl -f "$out"
+                  # A zero exit from pg_dump does not prove the archive is
+                  # readable. Parse the TOC back before shipping it, so a
+                  # truncated dump fails here instead of silently becoming
+                  # the backup you discover is useless during a restore.
+                  entries="$(pg_restore --list "$out" | grep -c '^[0-9]' || true)"
+                  [ "$entries" -gt 0 ] || { echo "FATAL: unreadable archive"; exit 1; }
+                  echo "wrote $out ($(du -h "$out" | cut -f1), $entries TOC entries)"
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+          containers:
+            - name: upload
+              image: rclone/rclone:latest
+              env:
+                - name: RCLONE_CONFIG_R2_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_R2_PROVIDER
+                  value: Cloudflare
+                - name: RCLONE_CONFIG_R2_REGION
+                  value: auto
+                - name: RCLONE_CONFIG_R2_NO_CHECK_BUCKET
+                  # This token is scoped to the single bucket, so rclone's
+                  # pre-flight HeadBucket 403s; it then tries CreateBucket,
+                  # which also 403s, and the upload fails AFTER a successful
+                  # dump - green job history, empty bucket. Skip the check.
+                  value: "true"
+                - name: RCLONE_CONFIG_R2_ENDPOINT
+                  value: https://a1fed5c5eaa4445fb566ae6bc7f8b079.r2.cloudflarestorage.com
+                - name: RCLONE_CONFIG_R2_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: r2-backup-creds
+                      key: ACCESS_KEY_ID
+                - name: RCLONE_CONFIG_R2_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: r2-backup-creds
+                      key: SECRET_ACCESS_KEY
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  ls /work/*.dump >/dev/null 2>&1 || { echo "FATAL: no dump to upload"; exit 1; }
+                  rclone copy /work "r2:pineapple-pg-backups/n8n/" --no-traverse --stats-one-line
+                  # copy, never sync: sync would mirror this run's single file
+                  # onto the remote and delete every previous backup.
+                  rclone delete "r2:pineapple-pg-backups/n8n/" --min-age 30d
+                  echo "--- retained ---"
+                  rclone lsl "r2:pineapple-pg-backups/n8n/"
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: work
+                  mountPath: /work
