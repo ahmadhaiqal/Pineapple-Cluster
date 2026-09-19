@@ -16,6 +16,12 @@ spec:
       policy-type: "database"
 
   storage:
+    # Pinned explicitly. These PVCs were created against the cluster's
+    # default StorageClass, which is Longhorn (see
+    # infrastructure/controllers/base/longhorn/) — relying on the default
+    # meant a rebuild could silently bind them to a different provisioner.
+    # Changing this does not migrate existing PVCs; it only governs new ones.
+    storageClass: longhorn
     size: 2Gi
 
   bootstrap:
