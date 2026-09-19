@@ -4,3 +4,4 @@ CLAUDE.md
 .claude/settings.local.json
 graphify-out/
 .claude/skills/graphify/
+backup-staging/
