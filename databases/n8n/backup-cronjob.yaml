@@ -45,7 +45,7 @@ spec:
               # pg_dump must be >= the server. This cluster runs a mix of
               # 16.1 and 16.14, so every job uses the newest 16.x client;
               # an older client against a newer server is what breaks.
-              image: ghcr.io/cloudnative-pg/postgresql:16
+              image: ghcr.io/cloudnative-pg/postgresql:18
               env:
                 - name: PGHOST
                   value: n8n-db-production-cnpg-v1-rw
