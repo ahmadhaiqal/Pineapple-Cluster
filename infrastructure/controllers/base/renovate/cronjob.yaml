@@ -12,7 +12,7 @@ spec:
         spec:
           containers:
             - name: renovate
-              image: renovate/renovate:44.111.4
+              image: renovate/renovate:44.115.10
               args:
                 - ahmadhaiqal/Pineapple-Cluster
 
