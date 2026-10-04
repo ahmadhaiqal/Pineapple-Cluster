@@ -1,0 +1,10 @@
+# Live in Omni as cluster-wide patch 500-e0548e09-fa40-461c-a0cd-349c0630cfe9
+# ("cilium patch"). Talos ships no CNI and no kube-proxy; Cilium provides both
+# (kube-proxy replacement) and is installed by FluxCD from
+# infrastructure/controllers/base/cilium/.
+#
+# `cluster.network.cni.name: none` is also expressed as `cniConfig` in
+# talconfig.yaml; this patch carries the kube-proxy half.
+cluster:
+  proxy:
+    disabled: true

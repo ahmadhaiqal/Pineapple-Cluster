@@ -1,0 +1,124 @@
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
+#
+# Talos machine configuration for the `Talos-Pineapple` cluster, rendered by
+# talhelper (https://github.com/budimanjojo/talhelper).
+#
+# ┌──────────────────────────────────────────────────────────────────────────┐
+# │ STATUS: REFERENCE ONLY — NOT YET AUTHORITATIVE.                          │
+# │ Sidero Omni is still the source of truth for node config. Nothing here   │
+# │ has been applied to a node. See talos/README.md for what still blocks    │
+# │ the cutover (short version: the cluster PKI lives in Omni and the        │
+# │ current Omni role cannot read it).                                       │
+# └──────────────────────────────────────────────────────────────────────────┘
+#
+# Every value below was recovered from the live cluster on 2026-09-18 via
+# `talosctl get ...` and `omnictl get configpatch`, not from memory or
+# guesswork. Provenance is noted per field.
+
+clusterName: Talos-Pineapple
+
+# ⚠️ AHEAD OF LIVE STATE — these are the post-patch-upgrade targets.
+# Live as of 2026-09-18 is Talos v1.13.3 / Kubernetes v1.36.1 (`omnictl get
+# clusters -o yaml`, confirmed by `talosctl version` and `talosctl get
+# kubeletconfig`). The patch upgrade to the values below is meant to be done
+# **in Omni, before the cutover** — Omni handles the rolling reboot and health
+# checks; doing a first-ever manual `talosctl upgrade` on a single-control-plane
+# cluster is not the place to learn.
+#
+# These are the newest patches on the CURRENT minor lines, deliberately not the
+# newest minors. Talos 1.14.1 and Kubernetes 1.37.0 are both available and both
+# are a deliberate "not yet": Talos 1.13.x caps at Kubernetes 1.36.4, so 1.37
+# would force a Talos minor jump as well, and 1.14.0 is two weeks old (released
+# 2026-09-03). See talos/README.md, "Version policy".
+talosVersion: v1.13.10
+kubernetesVersion: v1.36.4
+
+# ⚠️ DIVERGES FROM LIVE STATE — deliberately.
+# Live, the control plane endpoint is Omni's SideroLink address:
+#   https://[fdae:41e4:649b:9303::1]:10000
+# (visible as --api-audiences / --service-account-issuer on kube-apiserver).
+# Without Omni there is no SideroLink, so the endpoint becomes hippo-lab's LAN
+# address. Changing the service-account issuer invalidates every in-flight
+# service account token — see talos/README.md, "Cutover".
+endpoint: https://192.168.100.113:6443
+
+# hippo-lab stays tainted; all workloads run on urial-lab. This is the Talos
+# default and is what produces the register-with-taints kubelet arg currently
+# applied by an explicit Omni patch.
+allowSchedulingOnControlPlanes: false
+
+# From kube-controller-manager --cluster-cidr and kube-apiserver
+# --service-cluster-ip-range on hippo-lab.
+clusterPodNets:
+  - 10.244.0.0/16
+clusterSvcNets:
+  - 10.96.0.0/12
+
+# Cilium is the CNI and the kube-proxy replacement, installed by FluxCD.
+# The kube-proxy half lives in patches/global/cilium-cni.yaml.
+cniConfig:
+  name: none
+
+# Reachable names/IPs for the apiserver certificate once Omni's proxy is gone.
+additionalApiServerCertSans:
+  - 192.168.100.113
+  - 127.0.0.1
+additionalMachineCertSans:
+  - 192.168.100.113
+
+# Applied to every node, in order. Content is verbatim from the live Omni
+# ConfigPatches — each file names the patch ID it came from.
+patches:
+  - "@./patches/global/cilium-cni.yaml"
+  - "@./patches/global/ntp-servers.yaml"
+  - "@./patches/global/kubelet-image-gc.yaml"
+  - "@./patches/global/longhorn-kubelet-mount.yaml"
+  - "@./patches/global/v2-data-engine.yaml"
+
+controlPlane:
+  patches:
+    - "@./patches/controlplane/control-plane-taint.yaml"
+
+nodes:
+  # ── control plane ───────────────────────────────────────────────────────
+  # Omni machine ID 43126e8a-4c7b-95ef-a96c-8e0b615bcb3c
+  - hostname: Hippo-Lab
+    ipAddress: 192.168.100.113
+    controlPlane: true
+    # Samsung MZVLW256HEHP-000H1, 256 GB, the only non-loop disk on this node.
+    installDisk: /dev/nvme0n1
+    # DHCP from the router at 192.168.100.254. Pinned by MAC rather than
+    # interface name so a NIC rename cannot silently orphan the node.
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "ac:e2:d3:0b:32:34"   # eno1
+        dhcp: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/iscsi-tools      # hard requirement for Longhorn v1
+            - siderolabs/util-linux-tools # fstrim, for Longhorn filesystem trim
+
+  # ── worker ──────────────────────────────────────────────────────────────
+  # Omni machine ID 03000200-0400-0500-0006-000700080009
+  - hostname: Urial-Lab
+    ipAddress: 192.168.100.114
+    controlPlane: false
+    # ORE NVME 1TB. NOTE: this node also has a 2 TB USB disk (sda, Immich) and
+    # a shifting set of iSCSI devices (sdb…, Longhorn's own attachments) —
+    # /dev/sda is NOT stable here, do not install by that path.
+    installDisk: /dev/nvme0n1
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "20:24:05:26:00:16"   # enp1s0
+        dhcp: true
+    patches:
+      - "@./patches/urial-lab/immich-usb-disk.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/iscsi-tools
+            - siderolabs/util-linux-tools

@@ -1,0 +1,43 @@
+# Talos machine-config patch applied via Sidero Omni (NOT reconciled by FluxCD).
+#
+# ⚠️ REFERENCE / RECONSTRUCTED — read before applying.
+# This mount is ALREADY LIVE on both nodes (verified 2026-09-18 with
+# `talosctl get kubeletconfig`), but it was applied out-of-band and the ID of
+# the real patch in Omni is unknown — `omnictl get configpatch` could not be
+# run because the local omnictl (1.8.2) is older than the Omni backend
+# (1.12.1) and fails with "client API version mismatch". Applying this file as
+# a NEW patch would add a second, duplicate extraMounts entry. So: upgrade
+# omnictl, run `omnictl get configpatch`, and either rename this file to the
+# existing patch ID or fold it into that patch.
+#
+# Purpose: Longhorn stores replica data at /var/lib/longhorn (its
+# default-data-path) and the kubelet must see that path with shared mount
+# propagation, or CSI volume staging fails and no `storageClassName: longhorn`
+# PVC can be mounted into a pod. Present on BOTH nodes even though only
+# urial-lab currently schedules Longhorn replicas (hippo-lab is tainted
+# node-role.kubernetes.io/control-plane=:NoSchedule and longhorn-manager does
+# not tolerate it), so the patch is scoped cluster-wide.
+#
+# Pairs with omni/extensions/longhorn-iscsi.yaml — the mount is useless without
+# the iscsi-tools system extension.
+metadata:
+    namespace: default
+    type: ConfigPatches.omni.sidero.dev
+    id: 500-longhorn-kubelet-mount
+    labels:
+        omni.sidero.dev/cluster: Talos-Pineapple
+    annotations:
+        name: Longhorn kubelet mount
+        description: Bind-mount /var/lib/longhorn into the kubelet with rshared propagation so Longhorn CSI can stage volumes.
+spec:
+    data: |
+        machine:
+          kubelet:
+            extraMounts:
+              - destination: /var/lib/longhorn
+                type: bind
+                source: /var/lib/longhorn
+                options:
+                  - bind
+                  - rshared
+                  - rw
