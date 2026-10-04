@@ -1,22 +1,27 @@
-# Live in Omni as machine-scoped patch 500-759dfc08-c080-4d9d-b050-b84df3ab6ebb
-# ("Add 2TB memory"), urial-lab only.
+# urial-lab only — mounts the 2 TB ORICO CD3520 USB disk (xfs) at
+# /var/mnt/immich for Immich's `local` PV and the cluster-backups/ staging dir.
 #
-# The ORICO CD3520 USB enclosure holding the 2 TB disk that backs Immich's
-# 1800Gi `immich-library` PV (storageClassName: local). Talos partitions and
-# mounts it at /var/mnt/immich (xfs, /dev/sda1 as of 2026-09-18) and bind-mounts
-# that into the kubelet so the PV's hostPath is visible to pods.
+# ExistingVolumeConfig, NOT the old `machine.disks` block: it only MOUNTS a
+# volume that already exists and never partitions or formats. That matters on
+# a fresh install — this disk holds the only copy of Immich's originals and of
+# the pre-wipe PVC backups. Mount path is /var/mnt/<name>.
 #
-# This is the "known gap" omni/README.md flagged: it was live but unrecorded.
-# Now recovered verbatim from the Omni ConfigPatch.
-#
-# The by-id path is the enclosure's USB serial. `File-Stor_Gadget_1234567890`
-# is the generic gadget identity the CD3520 presents — it is NOT a placeholder,
-# do not "fix" it. Verify with `talosctl -n urial-lab get disks` before reuse.
+# Matched as "the xfs filesystem on a USB-transport disk" rather than by
+# /dev/sdX (unstable — Longhorn's iSCSI attachments take sdb…) or by a UUID,
+# which could not be read while urial-lab was down. It is the only USB disk on
+# the node. Once the node is up, tighten this to the real UUID:
+#   talosctl -n 192.168.100.114 get discoveredvolumes -o yaml
+apiVersion: v1alpha1
+kind: ExistingVolumeConfig
+name: immich
+discovery:
+  volumeSelector:
+    match: volume.name == "xfs" && disk.transport == "usb"
+mount:
+  readOnly: false
+---
+# Expose the mount to the kubelet so the `local` PV can bind it.
 machine:
-  disks:
-    - device: /dev/disk/by-id/usb-Linux_File-Stor_Gadget_1234567890-0:0
-      partitions:
-        - mountpoint: /var/mnt/immich
   kubelet:
     extraMounts:
       - destination: /var/mnt/immich

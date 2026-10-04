@@ -3,11 +3,12 @@
 A **git-native replacement for Sidero Omni's** node-configuration role, built
 with [talhelper](https://github.com/budimanjojo/talhelper).
 
-> **STATUS: reference only. Omni is still the source of truth.**
-> Nothing in this directory has been applied to a node. `talconfig.yaml` is a
-> faithful, verified reconstruction of live state — the thing that was missing
-> when `omni/README.md` said "Omni remains the source of truth" and then listed
-> config that only existed inside Omni's database.
+> **STATUS: authoritative for the rebuilt cluster (decided 2026-10-04).**
+> The Omni cluster is not migrated — it is **wiped and rebuilt** with fresh PKI
+> from `talhelper gensecret` (`talsecret.sops.yaml`), and data is restored from
+> backups. Sections below the runbook are kept as the 2026-09-18 history of how
+> the config was reconstructed; anything there about "the PKI blocker" or a
+> live cutover no longer applies.
 
 ## Why this exists
 
@@ -30,7 +31,7 @@ patches/global/           # applied to both nodes
 patches/controlplane/     # hippo-lab only
 patches/urial-lab/        # worker only
 clusterconfig/            # rendered output — gitignored, contains secrets
-talsecret.sops.yaml       # cluster PKI — DOES NOT EXIST YET, see "The blocker"
+talsecret.sops.yaml       # cluster PKI, SOPS/age-encrypted (whole file)
 ```
 
 Every patch file names the Omni ConfigPatch ID it was recovered from, so the
@@ -107,7 +108,153 @@ mechanical difference between an Omni-managed node and a standalone one. That
 is why leaving Omni means booting a different installer image, not just
 applying a different config.
 
-## Version policy
+## Rebuild runbook (Omni → standalone Talos)
+
+Target: **Talos v1.14.2 / Kubernetes v1.36.5** (1.37 waits for Cilium 1.20 to
+support it — see `talconfig.yaml`), installer schematic
+`613e1592…` (`iscsi-tools` + `util-linux-tools`, **no SideroLink kernel args**).
+The `v2-data-engine` patch is gone (it reserved 2 GiB of hugepages per node for
+a Longhorn engine that was never enabled).
+
+### What is lost, what comes back
+
+| Data | Source | Notes |
+|---|---|---|
+| 4 CNPG databases | R2 `pineapple-pg-backups`, newest **2026-09-29** | nightly jobs stalled after that |
+| App PVCs (17 archives) | ORICO `cluster-backups/20260919T031523Z/pvc/` | anything changed after **2026-09-19** is lost |
+| Immich originals | ORICO itself (`/var/mnt/immich/upload`) | untouched — the disk is never formatted |
+| `media-pvc` (movies/TV/music) | **nothing** | deliberately not backed up; re-download via Sonarr/Radarr/spotdl |
+| Raw Longhorn volumes | **nothing** | urial-lab's NVMe is wiped |
+
+### 0. Before touching either node
+
+- [ ] urial-lab survives a sustained-load soak with the ORICO **unplugged**
+      (the 2026-10-02 power-offs were power delivery, not Talos — a reinstall
+      does not fix them).
+- [ ] Router: DHCP reservations `ac:e2:d3:0b:32:34 → .113` (hippo-lab),
+      `20:24:05:26:00:16 → .114` (urial-lab). The apiserver endpoint is `.113`.
+- [ ] `~/Archive/age.agekey` copied somewhere off this workstation. Without it
+      `talsecret.sops.yaml` and every `secrets.yaml` are unreadable.
+- [ ] Download the latest R2 dumps locally as a second copy:
+      `rclone copy r2:pineapple-pg-backups ./backup-staging/r2-final`
+- [ ] Decide remote access (Omni provided it). LAN-only is the default; for
+      remote `kubectl`/`talosctl` add `siderolabs/tailscale` to both schematics
+      and re-render before installing.
+
+### 1. Install media
+
+```sh
+# ISO for the same schematic as the installer, version-matched:
+curl -LO https://factory.talos.dev/image/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245/v1.14.2/metal-amd64.iso
+```
+
+### 2. Render configs
+
+```sh
+export SOPS_AGE_KEY_FILE=~/Archive/age.agekey
+cd talos && talhelper genconfig          # -> ./clusterconfig (gitignored)
+talosctl validate --mode metal --strict -c clusterconfig/Talos-Pineapple-hippo-lab.yaml
+talosctl validate --mode metal --strict -c clusterconfig/Talos-Pineapple-urial-lab.yaml
+```
+
+### 3. Wipe and install
+
+1. **Unplug the ORICO from urial-lab.** `installDisk` is pinned to
+   `/dev/nvme0n1`, but the only real guarantee is the cable.
+2. Boot each node from the ISO → maintenance mode. If a node still has an old
+   Omni-era install, choose the ISO's wipe/reset option or the installer
+   will reuse the existing STATE.
+3. Apply config (maintenance mode accepts `--insecure` only):
+   ```sh
+   talosctl apply-config --insecure -n 192.168.100.113 -f clusterconfig/Talos-Pineapple-hippo-lab.yaml
+   talosctl apply-config --insecure -n 192.168.100.114 -f clusterconfig/Talos-Pineapple-urial-lab.yaml
+   ```
+4. Bootstrap etcd **once**, on hippo-lab only, then fetch credentials:
+   ```sh
+   export TALOSCONFIG=$PWD/clusterconfig/talosconfig
+   talosctl -n 192.168.100.113 bootstrap
+   talosctl -n 192.168.100.113 kubeconfig ~/.kube/config --force
+   talosctl -n 192.168.100.113 health --wait-timeout 15m
+   ```
+   Nodes stay `NotReady` until Cilium lands in step 4 — expected (no CNI).
+5. **Replug the ORICO**, then confirm the mount and pin it properly:
+   ```sh
+   talosctl -n 192.168.100.114 get discoveredvolumes -o yaml | grep -B5 -A15 xfs
+   talosctl -n 192.168.100.114 get volumestatus immich
+   ```
+   Replace the `volume.name == "xfs" && disk.transport == "usb"` selector in
+   `patches/urial-lab/immich-usb-disk.yaml` with the real UUID, re-render,
+   `talosctl apply-config` (no `--insecure` now).
+
+### 4. Cilium, then Flux
+
+Chicken-and-egg: with `cni: none` no pod gets a network, so the Flux
+controllers themselves cannot start until Cilium runs. Install Cilium once by
+hand with the **same chart version and values** Flux uses; helm-controller then
+adopts the release (same `releaseName: cilium`) instead of creating a second.
+
+```sh
+helm repo add cilium https://helm.cilium.io && helm repo update
+helm install cilium cilium/cilium -n kube-system \
+  --version "$(yq '.spec.chart.spec.version' ../infrastructure/controllers/base/cilium/release.yaml)" \
+  -f ../infrastructure/controllers/base/cilium/values.yaml
+kubectl get nodes -w            # both nodes go Ready once cilium-agent is up
+```
+
+`values.yaml` already points Cilium at KubePrism (`localhost:7445`), which
+Talos enables by default — required, since there is no kube-proxy.
+
+```sh
+kubectl create ns flux-system
+kubectl -n flux-system create secret generic sops-age \
+  --from-file=age.agekey=$HOME/Archive/age.agekey
+flux bootstrap github --owner=ahmadhaiqal --repository=Pineapple-Cluster \
+  --branch=main --path=cluster/staging --personal
+```
+
+Watch Cilium → Longhorn → CNPG → apps (`flux get kustomizations -A -w`).
+Then **suspend `apps` and `infrastructure-controllers`** before restoring, so
+apps aren't writing into volumes while their data is put back.
+
+### 5. Restore
+
+- **Databases:** `pg_restore` each R2 dump into its fresh CNPG cluster — run
+  it from a pod in-cluster, not through `kubectl exec` streaming.
+- **PVCs:** extract each `pvc/<ns>/<pvc>.tar.gz` from the ORICO into the
+  matching new PVC (`tar xzf <file> -C <mount>`), via a pod that mounts both
+  the ORICO (`local` PV, as in `scripts/pre-wipe-backup.sh`) and the target.
+- Resume Flux, then check every app through Cloudflare and confirm the next
+  nightly R2 upload actually lands (`rclone ls r2:pineapple-pg-backups/`).
+
+### 6. Leave Omni
+
+Only once `talosctl` and `kubectl` work without Omni: delete the cluster in
+the Omni UI, close the account, delete `omni/`, `./kubeconfig` and the Omni
+contexts in `~/.kube/config` / `~/.talos/config`.
+
+### Talos 1.14 gotchas hit while rendering
+
+- **talhelper v3.1.17 warns** `"v1.14.2" might not be compatible` — harmless;
+  its version table predates 1.14.2. `validate` and `genconfig` succeed.
+- **kube-proxy / CNI are separate documents** now. The old
+  `cluster.proxy.disabled: true` patch makes genconfig fail with
+  `can't be used with KubeProxyConfig document`. See
+  `patches/controlplane/cilium-cni.yaml`; `KubeProxyConfig` is
+  control-plane-only (on a worker, validate fails).
+- **`$patch: delete` must be written `$$patch`** — talhelper runs patches
+  through envsubst and otherwise errors `variable ${patch} not set`.
+- **Workload isolation stays off.** Fresh `talosctl gen config` emits
+  `SecurityProfileConfig { workloadIsolation: true }`; talhelper 3.1.17 can't
+  even decode that document (`not registered`) and so never emits it, and an
+  absent document means off. Enable deliberately once Longhorn attaches are
+  proven — see the 1.14 notes below.
+- **Hostnames are lowercase** (`hippo-lab`, `urial-lab`): they become the k8s
+  node names that `apps/` nodeAffinity rules pin to.
+- **The ORICO is an `ExistingVolumeConfig`**, not `machine.disks`: it only
+  mounts, never partitions or formats.
+
+## Version policy (2026-09-18 — superseded by the rebuild)
+
 
 `talconfig.yaml` targets **Talos v1.13.10 / Kubernetes v1.36.4** — the newest
 patches on the lines the cluster already runs. Live is still v1.13.3 / v1.36.1;
@@ -234,41 +381,3 @@ from this repo. That is a rebuild, not a migration — price it accordingly.
 **Do not run `talhelper gensecret` into this directory** before that question is
 settled. A stray secret file is exactly how someone ends up believing the
 running cluster can be reached with the wrong CA.
-
-## Cutover hazards (read before scheduling anything)
-
-- **One control plane.** hippo-lab *is* etcd. There is no rolling path; the
-  cluster is down for the duration.
-- **Longhorn replicas live on urial-lab's EPHEMERAL partition** and are
-  single-replica (hippo-lab is tainted, so anti-affinity can't place a second).
-  Wiping urial-lab destroys every PVC in `apps/` and `databases/`. Back up
-  first — Longhorn backup target, or CNPG `barman` dumps for the databases.
-- **The Immich 2 TB USB disk is a separate device** and is not touched by a
-  system-disk wipe, but `machine.disks` will not re-partition a disk that
-  already has the mountpoint — verify, don't assume.
-- **Service-account issuer changes.** Live, kube-apiserver runs with
-  `--service-account-issuer=https://[fdae:41e4:649b:9303::1]:10000` (Omni's
-  SideroLink address). Off Omni it becomes the LAN endpoint, invalidating
-  in-flight service account tokens; every pod needs a restart.
-- **Suspend Flux** (`flux suspend kustomization --all`) before the cutover so it
-  doesn't fight a half-built cluster, and resume after.
-
-## Observation worth acting on independently
-
-`patches/global/v2-data-engine.yaml` reserves **1024 hugepages (2 GiB of RAM)
-per node** plus loads `nvme_tcp`/`vfio_pci`, for Longhorn's v2 (SPDK) data
-engine — which is **not enabled** in
-`infrastructure/controllers/base/longhorn/values.yaml`. Both nodes are paying
-for it. Dropping that patch is a free 2 GiB per node; it is kept here only to
-match live state faithfully.
-
-## Once this is authoritative
-
-```sh
-talhelper genconfig                                  # render to ./clusterconfig
-talosctl apply-config -n 192.168.100.113 -f clusterconfig/Talos-Pineapple-Hippo-Lab.yaml
-talhelper gencommand apply --extra-flags --dry-run   # print the commands first
-```
-
-`clusterconfig/` and any unencrypted `talsecret.yaml` are gitignored — the
-rendered files contain the cluster CA in plaintext.

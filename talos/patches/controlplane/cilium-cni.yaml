@@ -1,0 +1,15 @@
+# Was live in Omni as cluster-wide patch 500-e0548e09-fa40-461c-a0cd-349c0630cfe9
+# ("cilium patch"). Talos ships no CNI and no kube-proxy here; Cilium provides
+# both (kube-proxy replacement) and is installed by FluxCD from
+# infrastructure/controllers/base/cilium/.
+#
+# Talos 1.14 form: CNI and kube-proxy are their own documents. The v1alpha1
+# `cluster.proxy.disabled` / `cluster.network.cni` fields conflict with them
+# and fail genconfig. Per siderolabs "Deploying Cilium" (v1.14).
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$$patch: delete  # `$$` escapes talhelper envsubst; renders as `$patch`
+---
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
