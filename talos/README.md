@@ -218,13 +218,30 @@ apps aren't writing into volumes while their data is put back.
 
 ### 5. Restore
 
-- **Databases:** `pg_restore` each R2 dump into its fresh CNPG cluster — run
-  it from a pod in-cluster, not through `kubectl exec` streaming.
-- **PVCs:** extract each `pvc/<ns>/<pvc>.tar.gz` from the ORICO into the
-  matching new PVC (`tar xzf <file> -C <mount>`), via a pod that mounts both
-  the ORICO (`local` PV, as in `scripts/pre-wipe-backup.sh`) and the target.
-- Resume Flux, then check every app through Cloudflare and confirm the next
-  nightly R2 upload actually lands (`rclone ls r2:pineapple-pg-backups/`).
+```sh
+scripts/post-rebuild-restore.sh --dry-run    # shows exactly what gets replaced
+scripts/post-rebuild-restore.sh              # type "restore" to confirm
+```
+
+It suspends Flux, scales the affected apps to 0, then:
+
+- **databases** (default `--db-source r2`): newest nightly dump per DB.
+  Drops and recreates each DB, replays extensions as a temporarily-enabled
+  CNPG superuser, restores the rest as the app owner in one transaction, and
+  checks the table count against the dump. Superuser access is turned back
+  off afterwards. `--db-source orico` uses the 09-19 dumps instead.
+- **PVCs**: checks each tarball's sha256 against `MANIFEST.txt`, empties the
+  target (the apps have already started once and written fresh state), and
+  extracts with the original numeric uid/gid.
+- **media-pvc**: recreates `media/{movies,tv,music}` and `torrents` as
+  `911:911 2775`. No data, because it was never backed up.
+
+On exit it always scales the apps back up and resumes Flux, even after a
+failure. Re-run with `--only <ns,...>` to redo one app. It refuses to run if
+your kube context still points at Omni.
+
+Then check every app through Cloudflare, and confirm the next nightly R2
+upload actually lands (`rclone ls r2:pineapple-pg-backups/`).
 
 ### 6. Leave Omni
 
