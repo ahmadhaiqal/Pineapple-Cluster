@@ -6,28 +6,21 @@
 # a fresh install — this disk holds the only copy of Immich's originals and of
 # the pre-wipe PVC backups. Mount path is /var/mnt/<name>.
 #
-# Matched as "the xfs filesystem on a USB-transport disk" rather than by
-# /dev/sdX (unstable — Longhorn's iSCSI attachments take sdb…) or by a UUID,
-# which is unknown until the ORICO is plugged into hippo-lab. It is the only USB disk on
-# the node. Once the node is up, tighten this to the real UUID:
-#   talosctl -n 192.168.100.113 get discoveredvolumes -o yaml
+# Matched by the filesystem UUID (read 2026-10-06; Seagate ST2000NM0008, serial
+# WAIHTO1Z), not by /dev/sdX — Longhorn's iSCSI attachments take sda… and the
+# ORICO lands wherever is free (it was sdg).
+#
+# NO kubelet extraMounts for this path. Talos already passes /var/mnt into the
+# kubelet as a propagation slave, so a mount here reaches pods on its own. The
+# old Omni-era `extraMounts: /var/mnt/immich (bind, rshared)` broke this on
+# 2026-10-06: kubelet bound the EMPTY NVMe directory before the ORICO was
+# plugged in, hid the ORICO from every pod, and being rshared, a pod volume
+# teardown propagated an unmount back to the host and unmounted the ORICO.
 apiVersion: v1alpha1
 kind: ExistingVolumeConfig
 name: immich
 discovery:
   volumeSelector:
-    match: volume.name == "xfs" && disk.transport == "usb"
+    match: volume.uuid == "da4a614e-1fba-4378-8429-13e5ea84422f"
 mount:
   readOnly: false
----
-# Expose the mount to the kubelet so the `local` PV can bind it.
-machine:
-  kubelet:
-    extraMounts:
-      - destination: /var/mnt/immich
-        type: bind
-        source: /var/mnt/immich
-        options:
-          - bind
-          - rshared
-          - rw
