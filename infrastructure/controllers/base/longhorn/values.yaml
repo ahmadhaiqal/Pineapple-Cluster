@@ -1,0 +1,23 @@
+# The live release was installed with NO custom values, so everything here is
+# written to match the chart defaults and the live StorageClass exactly — the
+# first Flux-driven upgrade is intended to be a no-op re-apply, not a change.
+# Verify with: kubectl get sc longhorn -o yaml
+persistence:
+  # Makes `longhorn` the cluster default StorageClass. The six CNPG clusters in
+  # databases/ used to rely on this implicitly; they now pin the class by name,
+  # but Immich and anything else created without a class still depend on it.
+  defaultClass: true
+  defaultFsType: ext4
+  reclaimPolicy: Delete
+  # Single-node cluster: hippo-lab is the only node (urial-lab retired
+  # 2026-10-06) and the control-plane taint is removed, so hippo-lab is the
+  # only Longhorn node (disk /var/lib/longhorn on the NVMe). A replica count
+  # above 1 can never be satisfied with replica-soft-anti-affinity=false and
+  # would leave every volume "Degraded", so new volumes get exactly 1 replica.
+  # There is no storage redundancy here — the nightly R2 dumps and the ORICO
+  # backups are the only copies.
+  defaultClassReplicaCount: 1
+defaultSettings:
+  # Same reason as defaultClassReplicaCount, for volumes created outside the
+  # StorageClass (Longhorn UI, backups restored as new volumes).
+  defaultReplicaCount: 1

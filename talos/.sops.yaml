@@ -1,0 +1,13 @@
+# SOPS rules for this directory only.
+#
+# The cluster-wide rules in cluster/staging/.sops.yaml do NOT apply here: SOPS
+# resolves .sops.yaml by walking up from the file being encrypted, so a file in
+# talos/ never sees cluster/staging/. That rule would also be wrong for a Talos
+# secret bundle — it encrypts only `data`/`stringData` (Kubernetes Secret
+# fields), whereas a talsecret has top-level `cluster`, `secrets`, `trustdinfo`
+# and `certs` keys. Encrypt everything here.
+#
+# Same Age recipient as the rest of the repo.
+creation_rules:
+  - path_regex: talsecret\.sops\.ya?ml$
+    age: age1av8wp2lg5m6anyd94jg9x67st3prnkfnacrtl25ptlzjmc06gqsq0w85c3

@@ -8,7 +8,7 @@
 # the primary data and the backup together. This is the copy that makes them
 # independent.
 #
-# Runs rclone in-cluster (the data is on urial-lab, not reachable from the
+# Runs rclone in-cluster (the data is on hippo-lab, not reachable from the
 # workstation) reaching the disk through a temporary `local` PV — not hostPath,
 # which Talos' default PodSecurity "baseline" forbids. See
 # scripts/pre-wipe-backup.sh for the same pattern and the reasoning.
@@ -63,7 +63,7 @@
 #
 set -euo pipefail
 
-NODE="urial-lab"
+NODE="hippo-lab"
 HOST_MOUNT="/var/mnt/immich"
 DEST_PVC="offsite-copy-src"
 HELPER_POD="offsite-copy"

@@ -20,7 +20,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - urial-lab
+                      - hippo-lab
 
       securityContext:
         fsGroup: 1000

@@ -1,0 +1,33 @@
+# hippo-lab only — mounts the 2 TB ORICO CD3520 USB disk (xfs) at
+# /var/mnt/immich for Immich's `local` PV and the cluster-backups/ staging dir.
+#
+# ExistingVolumeConfig, NOT the old `machine.disks` block: it only MOUNTS a
+# volume that already exists and never partitions or formats. That matters on
+# a fresh install — this disk holds the only copy of Immich's originals and of
+# the pre-wipe PVC backups. Mount path is /var/mnt/<name>.
+#
+# Matched as "the xfs filesystem on a USB-transport disk" rather than by
+# /dev/sdX (unstable — Longhorn's iSCSI attachments take sdb…) or by a UUID,
+# which is unknown until the ORICO is plugged into hippo-lab. It is the only USB disk on
+# the node. Once the node is up, tighten this to the real UUID:
+#   talosctl -n 192.168.100.113 get discoveredvolumes -o yaml
+apiVersion: v1alpha1
+kind: ExistingVolumeConfig
+name: immich
+discovery:
+  volumeSelector:
+    match: volume.name == "xfs" && disk.transport == "usb"
+mount:
+  readOnly: false
+---
+# Expose the mount to the kubelet so the `local` PV can bind it.
+machine:
+  kubelet:
+    extraMounts:
+      - destination: /var/mnt/immich
+        type: bind
+        source: /var/mnt/immich
+        options:
+          - bind
+          - rshared
+          - rw

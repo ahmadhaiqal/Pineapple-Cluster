@@ -5,3 +5,9 @@ CLAUDE.md
 graphify-out/
 .claude/skills/graphify/
 backup-staging/
+
+# talhelper — rendered Talos machine configs contain the cluster CA in plaintext
+talos/clusterconfig/
+talos/talsecret.yaml
+talos/talsecret.yml
+talos/.tmp/

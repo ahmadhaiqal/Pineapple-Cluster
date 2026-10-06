@@ -1,0 +1,97 @@
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
+#
+# Talos machine configuration for the `Talos-Pineapple` cluster, rendered by
+# talhelper (https://github.com/budimanjojo/talhelper).
+#
+# ┌──────────────────────────────────────────────────────────────────────────┐
+# │ STATUS: AUTHORITATIVE FOR THE FRESH (NON-OMNI) CLUSTER.                  │
+# │ Decided 2026-10-04: the cluster is rebuilt with NEW PKI from             │
+# │ `talhelper gensecret` — the Omni PKI is never extracted. Data comes back │
+# │ from backups. Procedure: talos/README.md, "Rebuild".                     │
+# │ 2026-10-06: SINGLE NODE. urial-lab is retired; hippo-lab runs            │
+# │ everything (control plane + all workloads + Longhorn + the ORICO).       │
+# └──────────────────────────────────────────────────────────────────────────┘
+#
+# Every value below was recovered from the live cluster on 2026-09-18 via
+# `talosctl get ...` and `omnictl get configpatch`, not from memory or
+# guesswork. Provenance is noted per field.
+
+clusterName: Talos-Pineapple
+
+# Fresh install, so there is no in-place upgrade path to protect: take the
+# current stable Talos line. Kubernetes is held at 1.36 on purpose, NOT Talos
+# 1.14.2's default 1.37.1: Cilium 1.20 (infrastructure/controllers/base/cilium)
+# is only e2e-tested up to 1.36. Talos 1.14 supports 1.33–1.37, so move to 1.37
+# with `talosctl upgrade-k8s` once Cilium's compatibility table lists it.
+# (The old cluster ran Talos v1.13.3 / Kubernetes v1.36.1.)
+talosVersion: v1.14.2
+kubernetesVersion: v1.36.5
+
+# hippo-lab's LAN address. The old cluster's endpoint was Omni's SideroLink
+# address (https://[fdae:41e4:649b:9303::1]:10000); a fresh cluster has no
+# tokens issued against it, so nothing breaks. hippo-lab gets its IP from
+# DHCP — the router MUST reserve .113 for this MAC, or a lease change
+# moves the apiserver out from under every kubeconfig.
+endpoint: https://192.168.100.113:6443
+
+# Single-node cluster: hippo-lab is the control plane AND the only place
+# workloads can run, so it must not carry the control-plane NoSchedule taint.
+allowSchedulingOnControlPlanes: true
+
+# From kube-controller-manager --cluster-cidr and kube-apiserver
+# --service-cluster-ip-range on hippo-lab.
+clusterPodNets:
+  - 10.244.0.0/16
+clusterSvcNets:
+  - 10.96.0.0/12
+
+# Cilium is the CNI and the kube-proxy replacement, installed by FluxCD.
+# The kube-proxy half lives in patches/global/cilium-cni.yaml.
+cniConfig:
+  name: none
+
+# Reachable names/IPs for the apiserver certificate once Omni's proxy is gone.
+additionalApiServerCertSans:
+  - 192.168.100.113
+  - 127.0.0.1
+additionalMachineCertSans:
+  - 192.168.100.113
+
+# Applied to every node, in order. Content is verbatim from the live Omni
+# ConfigPatches — each file names the patch ID it came from.
+patches:
+  - "@./patches/global/ntp-servers.yaml"
+  - "@./patches/global/kubelet-image-gc.yaml"
+  - "@./patches/global/longhorn-kubelet-mount.yaml"
+
+controlPlane:
+  patches:
+    # KubeProxyConfig is a control-plane-only document in Talos 1.14.
+    - "@./patches/controlplane/cilium-cni.yaml"
+
+nodes:
+  # ── control plane ───────────────────────────────────────────────────────
+  # Omni machine ID 43126e8a-4c7b-95ef-a96c-8e0b615bcb3c
+  - hostname: hippo-lab  # lowercase = the k8s node name; apps/ pins pods to it
+    ipAddress: 192.168.100.113
+    controlPlane: true
+    # ORE NVME 1TB (serial AA20231002000249), verified 2026-10-06 — the only
+    # non-loop disk on this node besides USB. The ORICO (USB, xfs) is also
+    # attached here; /dev/sdX is NOT stable, never install by that path.
+    installDisk: /dev/nvme0n1
+    # DHCP from the router at 192.168.100.254. Pinned by MAC rather than
+    # interface name so a NIC rename cannot silently orphan the node.
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "ac:e2:d3:0b:32:34"   # eno1
+        dhcp: true
+    patches:
+      - "@./patches/hippo-lab/immich-usb-disk.yaml"
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/iscsi-tools      # hard requirement for Longhorn v1
+            - siderolabs/util-linux-tools # fstrim, for Longhorn filesystem trim
+

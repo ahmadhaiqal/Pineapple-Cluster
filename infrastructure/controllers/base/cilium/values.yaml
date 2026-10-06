@@ -3,6 +3,11 @@ ipam:
 
 kubeProxyReplacement: true
 
+# Single-node cluster: the operator's 2nd replica can never schedule (it
+# requires a different node), so run exactly one.
+operator:
+  replicas: 1
+
 securityContext:
   capabilities:
     ciliumAgent:
