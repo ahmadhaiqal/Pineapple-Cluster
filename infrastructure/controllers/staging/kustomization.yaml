@@ -1,13 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - renovate
+  # - renovate  # OFF for phased start after 2026-10-06 rebuild
   - cloudnativepg
   - traefik
   - flaresolverr
   - cilium
   - external-dns
-  - n8n
+  # - n8n  # OFF for phased start after 2026-10-06 rebuild
   - immich
   - metrics-server
   - longhorn
