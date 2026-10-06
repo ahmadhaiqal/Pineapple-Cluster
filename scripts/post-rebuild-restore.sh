@@ -27,6 +27,9 @@
 #   scripts/post-rebuild-restore.sh --dry-run           # show the plan only
 #   scripts/post-rebuild-restore.sh --only suwayomi,homarr
 #   scripts/post-rebuild-restore.sh --skip-db | --skip-pvc
+#   scripts/post-rebuild-restore.sh --skip-absent       # ignore PVCs of apps
+#                                     not deployed (phased start), instead of
+#                                     aborting; each one skipped is printed
 #   scripts/post-rebuild-restore.sh --db-source orico   # 09-19 dumps, not R2
 #   scripts/post-rebuild-restore.sh --stamp 20260919T031523Z
 #
@@ -55,6 +58,7 @@ ONLY=""
 DO_DB=1
 DO_PVC=1
 DRY_RUN=0
+SKIP_ABSENT=0
 while (( $# )); do
   case "$1" in
     --db-source) DB_SOURCE="${2:?}"; shift ;;
@@ -63,7 +67,8 @@ while (( $# )); do
     --skip-db)   DO_DB=0 ;;
     --skip-pvc)  DO_PVC=0 ;;
     --dry-run)   DRY_RUN=1 ;;
-    -h|--help)   sed -n '2,34p' "$0"; exit 0 ;;
+    --skip-absent) SKIP_ABSENT=1 ;;
+    -h|--help)   sed -n '2,37p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -279,6 +284,25 @@ POD_EOF
 hx() { local ns="$1"; shift; kubectl -n "$ns" exec "$HELPER_POD" -- "$@"; }
 
 # ── preflight ────────────────────────────────────────────────────────────────
+# --skip-absent: drop PVCs that do not exist in the cluster (their app is
+# commented out of apps/staging), so a namespace can be restored while some of
+# its apps are still off. Without the flag a missing PVC aborts the run.
+prune_absent_pvcs() {
+  local entry ns p kept out=()
+  for entry in "${PVC_SETS[@]}"; do
+    ns="${entry%%:*}"; kept=""
+    for p in ${entry#*:}; do
+      if selected "$ns" && ! kubectl -n "$ns" get pvc "$p" >/dev/null 2>&1; then
+        warn "$ns/$p not deployed, skipping (--skip-absent)"
+        continue
+      fi
+      kept+="${kept:+ }$p"
+    done
+    [[ -n $kept ]] && out+=("${ns}:${kept}")
+  done
+  PVC_SETS=("${out[@]}")
+}
+
 preflight() {
   log "preflight"
   local t
@@ -313,6 +337,7 @@ preflight() {
   fi
   if (( DO_PVC )); then
     local p
+    (( SKIP_ABSENT )) && prune_absent_pvcs
     for entry in "${PVC_SETS[@]}"; do
       ns="${entry%%:*}"; selected "$ns" || continue
       for p in ${entry#*:}; do
@@ -401,7 +426,9 @@ quiesce() {
     for dep in ${entry#*:}; do
       sel="$(kubectl -n "$ns" get deploy "$dep" -o go-template \
               --template='{{range $k,$v := .spec.selector.matchLabels}}{{$k}}={{$v}},{{end}}' 2>/dev/null \
-              | sed 's/,$//')"
+              | sed 's/,$//' || true)"
+      # Missing deployment (app not deployed): pipefail would otherwise make
+      # this assignment fail and set -e exit with no message.
       [[ -n $sel ]] || continue
       # A Longhorn RWO volume cannot attach to the helper pod until the app
       # pod has fully let go of it.
@@ -530,7 +557,7 @@ ${fetch}  containers:
             -c 'CREATE DATABASE "${db}" OWNER "${owner}"'
           # The client may be newer than the server (dumps are written by the
           # backup CronJob's image: pg 18, servers: pg 16). pg_restore 18 sends
-          # `SET transaction_timeout` even on a direct -d connection, and a 16
+          # "SET transaction_timeout" even on a direct -d connection, and a 16
           # server rejects it. So render SQL with pg_restore and feed it to
           # psql, dropping that one session setting (it only sets the default).
           render() { pg_restore -f - "\$@" "\$f" | sed '/^SET transaction_timeout = /d'; }
@@ -561,7 +588,8 @@ PGPOD_EOF
       kubectl -n "$ns" logs "${HELPER_POD}-db" --all-containers 2>&1 | tail -15 >&2
       die "restore failed for $ns/$db (pod left behind for inspection until the script exits)"
     fi
-    result="$(kubectl -n "$ns" logs "${HELPER_POD}-db" -c restore 2>/dev/null | grep '^RESULT' | tail -1)"
+    result="$(kubectl -n "$ns" logs "${HELPER_POD}-db" -c restore 2>/dev/null | grep '^RESULT' | tail -1 || true)"
+    [[ -n $result ]] || die "restore pod for $ns/$db finished but printed no RESULT line - check: kubectl -n $ns logs ${HELPER_POD}-db -c restore"
     kubectl -n "$ns" delete pod "${HELPER_POD}-db" --ignore-not-found --wait=false >/dev/null 2>&1
     read -r _ got expect file <<<"$result"
     printf '%s%s tables%s (dump has %s)  %s  [%s]\n' "$GRN" "$got" "$RST" "$expect" "$file" "${pg_image##*:}"
