@@ -6,9 +6,11 @@
 #
 # ┌──────────────────────────────────────────────────────────────────────────┐
 # │ STATUS: AUTHORITATIVE FOR THE FRESH (NON-OMNI) CLUSTER.                  │
-# │ Decided 2026-10-04: urial-lab is wiped and the cluster is rebuilt with   │
-# │ NEW PKI from `talhelper gensecret` — the Omni PKI is never extracted.    │
-# │ Data comes back from backups. Procedure: talos/README.md, "Rebuild".     │
+# │ Decided 2026-10-04: the cluster is rebuilt with NEW PKI from             │
+# │ `talhelper gensecret` — the Omni PKI is never extracted. Data comes back │
+# │ from backups. Procedure: talos/README.md, "Rebuild".                     │
+# │ 2026-10-06: SINGLE NODE. urial-lab is retired; hippo-lab runs            │
+# │ everything (control plane + all workloads + Longhorn + the ORICO).       │
 # └──────────────────────────────────────────────────────────────────────────┘
 #
 # Every value below was recovered from the live cluster on 2026-09-18 via
@@ -28,15 +30,14 @@ kubernetesVersion: v1.36.5
 
 # hippo-lab's LAN address. The old cluster's endpoint was Omni's SideroLink
 # address (https://[fdae:41e4:649b:9303::1]:10000); a fresh cluster has no
-# tokens issued against it, so nothing breaks. Both nodes get their IPs from
-# DHCP — the router MUST reserve .113/.114 for these MACs, or a lease change
+# tokens issued against it, so nothing breaks. hippo-lab gets its IP from
+# DHCP — the router MUST reserve .113 for this MAC, or a lease change
 # moves the apiserver out from under every kubeconfig.
 endpoint: https://192.168.100.113:6443
 
-# hippo-lab stays tainted; all workloads run on urial-lab. This is the Talos
-# default and is what produces the register-with-taints kubelet arg currently
-# applied by an explicit Omni patch.
-allowSchedulingOnControlPlanes: false
+# Single-node cluster: hippo-lab is the control plane AND the only place
+# workloads can run, so it must not carry the control-plane NoSchedule taint.
+allowSchedulingOnControlPlanes: true
 
 # From kube-controller-manager --cluster-cidr and kube-apiserver
 # --service-cluster-ip-range on hippo-lab.
@@ -66,7 +67,6 @@ patches:
 
 controlPlane:
   patches:
-    - "@./patches/controlplane/control-plane-taint.yaml"
     # KubeProxyConfig is a control-plane-only document in Talos 1.14.
     - "@./patches/controlplane/cilium-cni.yaml"
 
@@ -76,7 +76,9 @@ nodes:
   - hostname: hippo-lab  # lowercase = the k8s node name; apps/ pins pods to it
     ipAddress: 192.168.100.113
     controlPlane: true
-    # Samsung MZVLW256HEHP-000H1, 256 GB, the only non-loop disk on this node.
+    # ORE NVME 1TB (serial AA20231002000249), verified 2026-10-06 — the only
+    # non-loop disk on this node besides USB. The ORICO (USB, xfs) is also
+    # attached here; /dev/sdX is NOT stable, never install by that path.
     installDisk: /dev/nvme0n1
     # DHCP from the router at 192.168.100.254. Pinned by MAC rather than
     # interface name so a NIC rename cannot silently orphan the node.
@@ -84,6 +86,8 @@ nodes:
       - deviceSelector:
           hardwareAddr: "ac:e2:d3:0b:32:34"   # eno1
         dhcp: true
+    patches:
+      - "@./patches/hippo-lab/immich-usb-disk.yaml"
     schematic:
       customization:
         systemExtensions:
@@ -91,24 +95,3 @@ nodes:
             - siderolabs/iscsi-tools      # hard requirement for Longhorn v1
             - siderolabs/util-linux-tools # fstrim, for Longhorn filesystem trim
 
-  # ── worker ──────────────────────────────────────────────────────────────
-  # Omni machine ID 03000200-0400-0500-0006-000700080009
-  - hostname: urial-lab  # immich, rdt-client, *arr, navidrome nodeAffinity use this
-    ipAddress: 192.168.100.114
-    controlPlane: false
-    # ORE NVME 1TB. NOTE: this node also has a 2 TB USB disk (sda, Immich) and
-    # a shifting set of iSCSI devices (sdb…, Longhorn's own attachments) —
-    # /dev/sda is NOT stable here, do not install by that path.
-    installDisk: /dev/nvme0n1
-    networkInterfaces:
-      - deviceSelector:
-          hardwareAddr: "20:24:05:26:00:16"   # enp1s0
-        dhcp: true
-    patches:
-      - "@./patches/urial-lab/immich-usb-disk.yaml"
-    schematic:
-      customization:
-        systemExtensions:
-          officialExtensions:
-            - siderolabs/iscsi-tools
-            - siderolabs/util-linux-tools

@@ -1,4 +1,4 @@
-# urial-lab only — mounts the 2 TB ORICO CD3520 USB disk (xfs) at
+# hippo-lab only — mounts the 2 TB ORICO CD3520 USB disk (xfs) at
 # /var/mnt/immich for Immich's `local` PV and the cluster-backups/ staging dir.
 #
 # ExistingVolumeConfig, NOT the old `machine.disks` block: it only MOUNTS a
@@ -8,9 +8,9 @@
 #
 # Matched as "the xfs filesystem on a USB-transport disk" rather than by
 # /dev/sdX (unstable — Longhorn's iSCSI attachments take sdb…) or by a UUID,
-# which could not be read while urial-lab was down. It is the only USB disk on
+# which is unknown until the ORICO is plugged into hippo-lab. It is the only USB disk on
 # the node. Once the node is up, tighten this to the real UUID:
-#   talosctl -n 192.168.100.114 get discoveredvolumes -o yaml
+#   talosctl -n 192.168.100.113 get discoveredvolumes -o yaml
 apiVersion: v1alpha1
 kind: ExistingVolumeConfig
 name: immich

@@ -19,7 +19,7 @@
 # restored. The restored immich database points at those same files.
 #
 # Same pattern as the backup: every byte moves in-cluster, inside pods on
-# urial-lab that reach the ORICO through a temporary `local` PV (baseline
+# hippo-lab that reach the ORICO through a temporary `local` PV (baseline
 # PodSecurity forbids hostPath). Only one-line results cross the API.
 #
 # Usage:
@@ -32,7 +32,7 @@
 #
 set -euo pipefail
 
-NODE="urial-lab"
+NODE="hippo-lab"
 HOST_MOUNT="/var/mnt/immich"          # ORICO mountpoint on the node
 BACKUP_SUBDIR="cluster-backups"
 SRC_PVC="restore-orico"               # temp PVC giving a namespace ORICO access

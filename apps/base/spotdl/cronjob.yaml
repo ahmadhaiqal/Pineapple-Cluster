@@ -12,7 +12,7 @@ spec:
       activeDeadlineSeconds: 10800 # kill after 3 hours (prevents pile-up when rate-limited)
       template:
         spec:
-          # media-pvc is RWO Longhorn attached on urial-lab — every pod that
+          # media-pvc is RWO Longhorn attached on hippo-lab — every pod that
           # mounts it must land on the same node.
           affinity:
             nodeAffinity:
@@ -22,7 +22,7 @@ spec:
                       - key: kubernetes.io/hostname
                         operator: In
                         values:
-                          - urial-lab
+                          - hippo-lab
 
           # Writes into the shared movietime media tree, so it must be 911
           # (see CLAUDE.md) — do not copy the 1000 from apps elsewhere.

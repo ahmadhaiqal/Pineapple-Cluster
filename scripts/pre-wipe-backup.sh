@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # pre-wipe-backup.sh — one-time backup of everything not reconstructible from git,
-# staged onto the ORICO USB disk (urial-lab /dev/sda1, mounted /var/mnt/immich).
+# staged onto the ORICO USB disk (hippo-lab USB, mounted /var/mnt/immich).
 #
 # This is STEP 1 of the rebuild sequence. It is additive: it creates a new
 # directory on an existing filesystem and writes into it. It does not
@@ -35,7 +35,7 @@
 #
 set -euo pipefail
 
-NODE="urial-lab"
+NODE="hippo-lab"
 HOST_MOUNT="/var/mnt/immich"          # ORICO mountpoint on the node
 DEST_PVC="prewipe-backup-dest"        # temp PVC giving a namespace ORICO access
 # NOT "backups": /var/mnt/immich/backups is Immich's OWN automatic database
@@ -187,7 +187,7 @@ confirm() {
 
 # ── ORICO access: a temporary `local` PV + PVC, one per namespace ───────────
 # Mirrors the existing immich-library-pv (local.path /var/mnt/immich,
-# nodeAffinity urial-lab, storageClassName "local" - note there is no such
+# nodeAffinity hippo-lab, storageClassName "local" - note there is no such
 # StorageClass object, these are statically bound by volumeName/claimRef).
 # Capacity is a formality: Kubernetes does not enforce quota on local PVs.
 ensure_dest() {

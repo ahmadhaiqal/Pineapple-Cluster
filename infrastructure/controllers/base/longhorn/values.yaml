@@ -9,14 +9,15 @@ persistence:
   defaultClass: true
   defaultFsType: ext4
   reclaimPolicy: Delete
-  # NOTE: this cluster has ONE Longhorn node. hippo-lab is tainted
-  # node-role.kubernetes.io/control-plane=:NoSchedule and longhorn-manager does
-  # not tolerate it, so only urial-lab contributes storage (disk
-  # /var/lib/longhorn, ~51 GB reserved). With replica-soft-anti-affinity=false,
-  # replicas must land on distinct nodes — so every volume created at 3 runs
-  # with 1 replica and reports "Degraded" forever. That is the current live
-  # state and it works; dropping this to 1 would make new volumes report
-  # Healthy and is cosmetic-plus-honest, but it changes behaviour, so it is
-  # left at the live value deliberately. Existing volumes keep whatever count
-  # they were created with either way.
-  defaultClassReplicaCount: 3
+  # Single-node cluster: hippo-lab is the only node (urial-lab retired
+  # 2026-10-06) and the control-plane taint is removed, so hippo-lab is the
+  # only Longhorn node (disk /var/lib/longhorn on the NVMe). A replica count
+  # above 1 can never be satisfied with replica-soft-anti-affinity=false and
+  # would leave every volume "Degraded", so new volumes get exactly 1 replica.
+  # There is no storage redundancy here — the nightly R2 dumps and the ORICO
+  # backups are the only copies.
+  defaultClassReplicaCount: 1
+defaultSettings:
+  # Same reason as defaultClassReplicaCount, for volumes created outside the
+  # StorageClass (Longhorn UI, backups restored as new volumes).
+  defaultReplicaCount: 1

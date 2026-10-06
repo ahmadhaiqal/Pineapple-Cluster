@@ -12,7 +12,7 @@ spec:
       labels:
         app: navidrome
     spec:
-      # media-pvc is RWO Longhorn attached on urial-lab — every pod that
+      # media-pvc is RWO Longhorn attached on hippo-lab — every pod that
       # mounts it must land on the same node.
       affinity:
         nodeAffinity:
@@ -22,7 +22,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - urial-lab
+                      - hippo-lab
 
       # Read-only consumer of the media tree, so UID 1000 is fine here
       # (tree is 2775/world-readable); only writers must be 911.
