@@ -557,7 +557,7 @@ ${fetch}  containers:
             -c 'CREATE DATABASE "${db}" OWNER "${owner}"'
           # The client may be newer than the server (dumps are written by the
           # backup CronJob's image: pg 18, servers: pg 16). pg_restore 18 sends
-          # `SET transaction_timeout` even on a direct -d connection, and a 16
+          # "SET transaction_timeout" even on a direct -d connection, and a 16
           # server rejects it. So render SQL with pg_restore and feed it to
           # psql, dropping that one session setting (it only sets the default).
           render() { pg_restore -f - "\$@" "\$f" | sed '/^SET transaction_timeout = /d'; }
