@@ -426,7 +426,9 @@ quiesce() {
     for dep in ${entry#*:}; do
       sel="$(kubectl -n "$ns" get deploy "$dep" -o go-template \
               --template='{{range $k,$v := .spec.selector.matchLabels}}{{$k}}={{$v}},{{end}}' 2>/dev/null \
-              | sed 's/,$//')"
+              | sed 's/,$//' || true)"
+      # Missing deployment (app not deployed): pipefail would otherwise make
+      # this assignment fail and set -e exit with no message.
       [[ -n $sel ]] || continue
       # A Longhorn RWO volume cannot attach to the helper pod until the app
       # pod has fully let go of it.
@@ -586,7 +588,8 @@ PGPOD_EOF
       kubectl -n "$ns" logs "${HELPER_POD}-db" --all-containers 2>&1 | tail -15 >&2
       die "restore failed for $ns/$db (pod left behind for inspection until the script exits)"
     fi
-    result="$(kubectl -n "$ns" logs "${HELPER_POD}-db" -c restore 2>/dev/null | grep '^RESULT' | tail -1)"
+    result="$(kubectl -n "$ns" logs "${HELPER_POD}-db" -c restore 2>/dev/null | grep '^RESULT' | tail -1 || true)"
+    [[ -n $result ]] || die "restore pod for $ns/$db finished but printed no RESULT line - check: kubectl -n $ns logs ${HELPER_POD}-db -c restore"
     kubectl -n "$ns" delete pod "${HELPER_POD}-db" --ignore-not-found --wait=false >/dev/null 2>&1
     read -r _ got expect file <<<"$result"
     printf '%s%s tables%s (dump has %s)  %s  [%s]\n' "$GRN" "$got" "$RST" "$expect" "$file" "${pg_image##*:}"
