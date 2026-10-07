@@ -30,6 +30,11 @@
 #   scripts/post-rebuild-restore.sh --skip-absent       # ignore PVCs of apps
 #                                     not deployed (phased start), instead of
 #                                     aborting; each one skipped is printed
+#   scripts/post-rebuild-restore.sh --only movietime --pvc sonarr-config-pvc,radarr-config-pvc
+#                                     # only these PVCs; only the apps whose name
+#                                     prefixes them are scaled down. Implies
+#                                     --skip-db. For phasing apps into a
+#                                     namespace whose other apps are already live
 #   scripts/post-rebuild-restore.sh --db-source orico   # 09-19 dumps, not R2
 #   scripts/post-rebuild-restore.sh --stamp 20260919T031523Z
 #
@@ -55,6 +60,7 @@ MEDIA_UID=911                         # movietime shared-storage owner, see CLAU
 DB_SOURCE="r2"
 STAMP=""
 ONLY=""
+PVC_ONLY=""
 DO_DB=1
 DO_PVC=1
 DRY_RUN=0
@@ -64,11 +70,12 @@ while (( $# )); do
     --db-source) DB_SOURCE="${2:?}"; shift ;;
     --stamp)     STAMP="${2:?}"; shift ;;
     --only)      ONLY="${2:?}"; shift ;;
+    --pvc)       PVC_ONLY="${2:?}"; DO_DB=0; shift ;;
     --skip-db)   DO_DB=0 ;;
     --skip-pvc)  DO_PVC=0 ;;
     --dry-run)   DRY_RUN=1 ;;
     --skip-absent) SKIP_ABSENT=1 ;;
-    -h|--help)   sed -n '2,37p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '2,39p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -108,6 +115,30 @@ COLD_WORKLOADS=(
   "sparkyfitness:sparkyfitness-frontend sparkyfitness-server"
   "suwayomi:suwayomi"
 )
+
+# --pvc: keep only the listed PVCs, and only the workloads that own one
+# (<deploy>-* naming, e.g. sonarr -> sonarr-config-pvc). Live apps sharing the
+# namespace keep running and keep their data.
+if [[ -n $PVC_ONLY ]]; then
+  filter_sets() {
+    local -n arr="$1"; local mode="$2" entry ns item p kept out=()
+    for entry in "${arr[@]}"; do
+      ns="${entry%%:*}"; kept=""
+      for item in ${entry#*:}; do
+        for p in ${PVC_ONLY//,/ }; do
+          if [[ $mode == pvc && $item == "$p" ]] || [[ $mode == deploy && $p == "$item"-* ]]; then
+            kept+="${kept:+ }$item"; break
+          fi
+        done
+      done
+      [[ -n $kept ]] && out+=("${ns}:${kept}")
+    done
+    arr=(${out[@]+"${out[@]}"})
+  }
+  filter_sets PVC_SETS pvc
+  filter_sets COLD_WORKLOADS deploy
+  (( ${#PVC_SETS[@]} )) || { echo "--pvc matched no known PVC" >&2; exit 2; }
+fi
 
 # `databases` is included because this script flips enableSuperuserAccess on
 # the CNPG Clusters. Flux would not revert that field (git never sets it), but

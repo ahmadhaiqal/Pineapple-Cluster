@@ -10,10 +10,10 @@ resources:
   - navidrome
   - spotdl
   - jellyfin
-  # - rdt-client  # OFF for phased start after 2026-10-06 rebuild
-  # - prowlarr  # OFF for phased start after 2026-10-06 rebuild
-  # - sonarr  # OFF for phased start after 2026-10-06 rebuild
-  # - radarr  # OFF for phased start after 2026-10-06 rebuild
-  # - seerr  # OFF for phased start after 2026-10-06 rebuild
+  - rdt-client
+  - prowlarr
+  - sonarr
+  - radarr
+  - seerr
   - immich
   # - sparkyfitness  # OFF for phased start after 2026-10-06 rebuild
