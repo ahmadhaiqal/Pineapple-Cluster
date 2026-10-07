@@ -10,10 +10,10 @@ resources:
   - navidrome
   - spotdl
   - jellyfin
-  # - rdt-client  # OFF: 2026-10-07 phase-in drove hippo-lab out of memory
-  # - prowlarr  # OFF: 2026-10-07 phase-in drove hippo-lab out of memory
-  # - sonarr  # OFF: 2026-10-07 phase-in drove hippo-lab out of memory
-  # - radarr  # OFF: 2026-10-07 phase-in drove hippo-lab out of memory
-  # - seerr  # OFF: 2026-10-07 phase-in drove hippo-lab out of memory
+  - rdt-client
+  - prowlarr
+  - sonarr
+  - radarr
+  - seerr
   - immich
   # - sparkyfitness  # OFF for phased start after 2026-10-06 rebuild
