@@ -28,7 +28,7 @@ spec:
     grafana:
       adminPassword: amdhql
       service:
-        type: LoadBalancer
+        type: ClusterIP
       ingress:
         enabled: true
         ingressClassName: traefik
