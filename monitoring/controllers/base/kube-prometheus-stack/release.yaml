@@ -26,6 +26,8 @@ spec:
           kind: PrometheusRule
   values:
     grafana:
+      # Disabled for now; flip to true to bring Grafana back (admin secret, ingress and TLS are kept).
+      enabled: false
       admin:
         existingSecret: grafana-admin
         userKey: admin-user
