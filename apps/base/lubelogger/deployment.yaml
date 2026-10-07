@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lubelogger
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # RWO volumes; LiteDB can't be opened by two pods
+  selector:
+    matchLabels:
+      app: lubelogger
+  template:
+    metadata:
+      labels:
+        app: lubelogger
+    spec:
+      containers:
+        - name: lubelogger
+          image: ghcr.io/hargata/lubelogger:v1.7.3
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+
+          env:
+            - name: LC_ALL
+              value: en_US.UTF-8
+            - name: LANG
+              value: en_US.UTF-8
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          volumeMounts:
+            - name: lubelogger-data
+              mountPath: /App/data
+            # ASP.NET DataProtection keys — without these, logins are lost on every restart
+            - name: lubelogger-keys
+              mountPath: /root/.aspnet/DataProtection-Keys
+
+      restartPolicy: Always
+
+      volumes:
+        - name: lubelogger-data
+          persistentVolumeClaim:
+            claimName: lubelogger-data-pvc
+        - name: lubelogger-keys
+          persistentVolumeClaim:
+            claimName: lubelogger-keys-pvc
