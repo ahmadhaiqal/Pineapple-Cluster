@@ -4,6 +4,7 @@ metadata:
   name: spotdl-playlists
 data:
   playlist.txt: |
+    https://open.spotify.com/playlist/37i9dQZF1DXa2EiKmMLhFD
     https://open.spotify.com/playlist/37i9dQZEVXbJlfUljuZExa
     https://open.spotify.com/playlist/3huoXlyb74HXLpTkuOZ0SG
     https://open.spotify.com/playlist/4351q2jmMFNW7omVJvRWKA
