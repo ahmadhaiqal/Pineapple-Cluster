@@ -1,0 +1,27 @@
+# hippo-lab only — the 1 TB SATA HDD (ST1000LM024, added 2026-10-11) as a
+# dedicated backup disk, mounted at /var/mnt/backups.
+#
+# Why a separate disk: the ORICO holds Immich's originals AND, until now, every
+# local backup. One enclosure failure took both. Backups land here instead, on
+# a different physical disk and a different bus (SATA, not USB).
+#
+# UserVolumeConfig, NOT ExistingVolumeConfig: Talos creates the partition and
+# formats it. It only ever provisions into free space on a disk matching the
+# selector, and once the partition exists it is reused, never re-formatted.
+#
+# Matched by WWID, not /dev/sdX — this disk was sda on 2026-10-11, but the
+# ORICO and Longhorn's iSCSI attachments shuffle sdX letters between boots.
+# Never widen this selector: anything it matches is fair game for formatting.
+#
+# Like /var/mnt/immich, no kubelet extraMounts — Talos already propagates
+# /var/mnt into the kubelet (see immich-usb-disk.yaml for why rshared broke).
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: backups
+provisioning:
+  diskSelector:
+    match: disk.wwid == "naa.50004cf20f967e45" && !system_disk
+  minSize: 900GB
+  grow: true
+filesystem:
+  type: xfs
