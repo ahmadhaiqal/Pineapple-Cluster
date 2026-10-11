@@ -1,0 +1,129 @@
+# Nightly copy of Immich's irreplaceable data from the ORICO USB disk to the
+# dedicated SATA backup disk (/var/mnt/backups, see
+# talos/patches/hippo-lab/backups-sata-disk.yaml).
+#
+# Before this, the originals and every local backup shared one USB enclosure;
+# one failure lost both. This copy lives on a separate physical disk.
+#
+# WHAT IS COPIED (/var/mnt/immich -> /var/mnt/backups/immich):
+#   upload/    ~64G  ORIGINAL photos and videos - irreplaceable
+#   profile/   ~0    user avatars
+#   backups/ -> db-dumps/   Immich's own nightly DB dump (02:00), ~68M each
+# NOT copied: encoded-video/ and thumbs/ - Immich regenerates both from upload/.
+#
+# rclone `copy`, never `sync`: a photo deleted in Immich (or by mistake) stays
+# in the backup. Only db-dumps/ is pruned, by age, so it cannot grow forever.
+#
+# Static `local` PV, not hostPath: Talos enforces PodSecurity "baseline"
+# cluster-wide, which forbids hostPath.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: immich-local-backups-pv
+spec:
+  capacity:
+    storage: 900Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local
+  local:
+    path: /var/mnt/backups
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - hippo-lab
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-local-backups
+  namespace: immich
+spec:
+  storageClassName: local
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 900Gi
+  volumeName: immich-local-backups-pv
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: immich-local-backup
+  namespace: immich
+spec:
+  schedule: "30 3 * * *"          # after Immich's 02:00 dump and the 02:15 R2 dump
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600   # still run if the node was down at 03:30
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 21600  # first run copies all ~64G over USB
+      template:
+        spec:
+          restartPolicy: OnFailure
+          # Runs as root with NO fsGroup on purpose. An fsGroup makes kubelet
+          # recursively chown local volumes, i.e. rewrite ownership across the
+          # whole Immich library. Root needs no capabilities here: the library
+          # is world-readable (644/755) and root owns the backup disk.
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          volumes:
+            - name: library
+              persistentVolumeClaim:
+                claimName: immich-library
+                readOnly: true
+            - name: backups
+              persistentVolumeClaim:
+                claimName: immich-local-backups
+          containers:
+            - name: copy
+              image: rclone/rclone:latest
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  src=/library; dst=/backups/immich
+                  # The ORICO is mounted at the host's /var/mnt/immich. If it
+                  # is unplugged, that is an empty directory - refuse to treat
+                  # "nothing there" as a successful backup.
+                  [ -d "$src/upload" ] && [ -n "$(ls -A "$src/upload")" ] \
+                    || { echo "FATAL: $src/upload missing or empty - ORICO not mounted?"; exit 1; }
+                  for d in upload profile; do
+                    rclone copy "$src/$d" "$dst/$d" --local-no-check-updated --stats-one-line --stats 5m --stats-log-level NOTICE
+                  done
+                  rclone copy "$src/backups" "$dst/db-dumps" --stats-one-line
+                  rclone delete "$dst/db-dumps" --min-age 30d
+                  # Prove the originals arrived: every source file must exist
+                  # on the backup with the same size.
+                  rclone check "$src/upload" "$dst/upload" --one-way --size-only
+                  echo "--- backup disk ---"
+                  rclone size "$dst/upload"
+                  rclone lsl "$dst/db-dumps" | sort -k2,3 | tail -3
+                  df -h /backups
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - name: library
+                  mountPath: /library
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
