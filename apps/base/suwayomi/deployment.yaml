@@ -19,7 +19,12 @@ spec:
 
       containers:
         - name: suwayomi
-          image: ghcr.io/suwayomi/suwayomi-server:v2.4.2376
+          # Pinned to a STABLE release (github.com/Suwayomi/Suwayomi-Server/releases).
+          # Stable and preview builds share the vX.Y.NNNN tag format, so Renovate
+          # also offers previews: v2.4.2376 (2026-10-11) crash-looped on a
+          # USERACCOUNT 'admin' migration (DbMigrationFailure). Only merge a
+          # Renovate bump whose tag is listed as a GitHub release.
+          image: ghcr.io/suwayomi/suwayomi-server:v2.4.2366
           ports:
             - containerPort: 4567
 
