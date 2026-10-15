@@ -38,6 +38,16 @@ spec:
               volumeMounts:
                 - name: data
                   mountPath: /data
+            # yt-dlp needs a JS runtime to solve YouTube's signature/n
+            # challenges; without one every download fails ("Some YouTube
+            # downloads require Deno"). The spotdl image ships none, so copy
+            # the Deno binary into a shared dir that is on spotdl's PATH.
+            - name: deno
+              image: denoland/deno:2.9.7
+              command: ["sh", "-c", "cp \"$(command -v deno)\" /tools/deno"]
+              volumeMounts:
+                - name: tools
+                  mountPath: /tools
 
           containers:
             - name: spotdl
@@ -51,6 +61,8 @@ spec:
                 # writable $HOME for its cache.
                 - name: HOME
                   value: /tmp
+                - name: PATH
+                  value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
               # v4.5.0: no /app/.venv — the image entrypoint is `uv run ... spotdl`,
               # replicated here so the playlist loop still works. Default audio
               # provider (ytmusic via yt-dlp) replaces the dead `piped` fallback.
@@ -68,6 +80,10 @@ spec:
               # playlists (Spotify order preserved, updated on every scan).
               # Per-playlist folders keep sync deletions from clobbering a
               # song that another playlist still references.
+              #
+              # `--with yt-dlp` overlays the newest yt-dlp from PyPI on every
+              # run. The image's bundled yt-dlp goes stale within months and
+              # YouTube then 403s every stream (2026.03.17 did by Oct 2026).
               command:
                 - /bin/sh
                 - -c
@@ -84,7 +100,8 @@ spec:
                     else
                       set -- --save-file "$save" sync "$url"
                     fi
-                    uv run --project /app --no-dev --frozen --no-sync spotdl \
+                    uv run --project /app --no-dev --frozen --no-sync \
+                      --with "yt-dlp[default]" spotdl \
                       --output "{list-name}/{artists} - {title}.{output-ext}" \
                       --m3u "{list}.m3u8" \
                       "$@" || { echo "sync failed for $url"; fail=1; }
@@ -96,6 +113,8 @@ spec:
                   mountPath: /data
                 - name: config
                   mountPath: /config
+                - name: tools
+                  mountPath: /tools
           restartPolicy: OnFailure
           volumes:
             - name: data
@@ -104,3 +123,5 @@ spec:
             - name: config
               configMap:
                 name: spotdl-playlists
+            - name: tools
+              emptyDir: {}
