@@ -81,13 +81,19 @@ spec:
               # Per-playlist folders keep sync deletions from clobbering a
               # song that another playlist still references.
               #
-              # `--with yt-dlp` overlays the newest yt-dlp from PyPI on every
-              # run. The image's bundled yt-dlp goes stale within months and
-              # YouTube then 403s every stream (2026.03.17 did by Oct 2026).
+              # The newest yt-dlp from PyPI is installed into /tmp/ytdlp and put
+              # first on PYTHONPATH, shadowing the image's bundled copy. That one
+              # goes stale within months and YouTube then 403s every stream
+              # (2026.03.17 and 2026.07.04 both did by Oct 2026). `uv run --with`
+              # can't do this: it keeps the bundled copy since it already
+              # satisfies an unpinned requirement.
               command:
                 - /bin/sh
                 - -c
                 - |
+                  uv pip install --quiet --python /app/.venv/bin/python \
+                    --target /tmp/ytdlp "yt-dlp[default]"
+                  export PYTHONPATH=/tmp/ytdlp
                   cd /data/media/music
                   mkdir -p .spotdl
                   fail=0
@@ -100,8 +106,7 @@ spec:
                     else
                       set -- --save-file "$save" sync "$url"
                     fi
-                    uv run --project /app --no-dev --frozen --no-sync \
-                      --with "yt-dlp[default]" spotdl \
+                    uv run --project /app --no-dev --frozen --no-sync spotdl \
                       --output "{list-name}/{artists} - {title}.{output-ext}" \
                       --m3u "{list}.m3u8" \
                       "$@" || { echo "sync failed for $url"; fail=1; }
