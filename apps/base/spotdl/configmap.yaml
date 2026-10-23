@@ -17,3 +17,201 @@ data:
     https://open.spotify.com/playlist/3IoR0X01L4jbf1UkwpEBVH
     https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
     https://open.spotify.com/playlist/5MphfQSB51attP434RG2Rb
+  run.sh: |
+    #!/bin/sh
+    set -eu
+    cd /data/media/music
+    mkdir -p .spotdl-logs
+
+    # Resolve the image's actual Python instead of assuming /app/.venv exists.
+    python_bin=$(uv run --project /app --no-dev --frozen --no-sync \
+      python -c 'import sys; print(sys.executable)')
+    uv pip install --quiet --python "$python_bin" \
+      --target /tmp/python-packages "yt-dlp[default]" mutagen
+    export PYTHONPATH="/tmp/python-packages${PYTHONPATH:+:$PYTHONPATH}"
+
+    run_dir=$(mktemp -d /data/media/music/.spotdl-run.XXXXXX)
+    trap 'rm -rf "$run_dir"' 0
+    fail=0
+    while IFS= read -r url || [ -n "$url" ]; do
+      url=$(printf '%s' "$url" | tr -d '\r')
+      [ -z "$url" ] && continue
+      case "$url" in
+        https://open.spotify.com/playlist/*) ;;
+        *) echo "Invalid playlist URL: $url"; fail=1; continue ;;
+      esac
+      id=${url##*/}
+      id=${id%%\?*}
+      case "$id" in
+        ''|*[!A-Za-z0-9]*) echo "Invalid playlist ID: $id"; fail=1; continue ;;
+      esac
+      mkdir -p "$id"
+      echo "Processing playlist: $id"
+      # Download from the live URL. Never delete removed songs.
+      # A literal playlist-ID directory isolates duplicate scanning.
+      if uv run --project /app --no-dev --frozen --no-sync spotdl \
+        download "$url" \
+        --scan-for-songs \
+        --overwrite skip \
+        --output "$id/{artists} - {title}.{output-ext}" \
+        --m3u "$run_dir/$id.m3u8" \
+        --print-errors \
+        --save-errors ".spotdl-logs/$id.errors.log"
+      then
+        echo "Finished playlist: $id"
+      else
+        echo "Failed playlist: $id"
+        fail=1
+      fi
+    done < /config/playlist.txt
+    if [ "$fail" -ne 0 ]; then
+      echo "A playlist failed. Published playlists and archives unchanged."
+      exit 1
+    fi
+    uv run --project /app --no-dev --frozen --no-sync \
+      python /config/archive_playlists.py "$run_dir"
+  archive_playlists.py: |
+    import os
+    import re
+    import sys
+    from collections import defaultdict
+    from pathlib import Path
+    from urllib.parse import urlsplit
+    from mutagen import File
+
+    ROOT = Path('/data/media/music').resolve()
+    STAGING = Path(sys.argv[1]).resolve()
+    EXTENSIONS = {'.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wav'}
+    LANGUAGES = {}
+    for name, codes in {
+        'English': 'en eng english', 'Malay': 'ms msa may malay',
+        'Indonesian': 'id ind indonesian', 'Chinese': 'zh zho chi chinese',
+        'Japanese': 'ja jpn japanese', 'Korean': 'ko kor korean',
+        'Tamil': 'ta tam tamil', 'Hindi': 'hi hin hindi',
+        'Thai': 'th tha thai', 'Unknown': 'und'
+    }.items():
+        LANGUAGES.update(dict.fromkeys(codes.split(), name))
+
+    def first(tags, key):
+        value = tags.get(key, [])
+        if isinstance(value, (list, tuple)):
+            return str(value[0]).strip() if value else ''
+        return str(value).strip()
+
+    def metadata(path):
+        audio = File(path, easy=True)
+        if audio is None:
+            raise ValueError(f'Cannot read audio metadata: {path}')
+        tags = audio.tags or {}
+        isrc = first(tags, 'isrc').replace(' ', '').upper()
+        artist, title = first(tags, 'artist'), first(tags, 'title')
+        if isrc:
+            identity = ('isrc', isrc)
+        elif artist and title:
+            identity = ('tags', artist.casefold(), title.casefold())
+        else:
+            identity = ('filename', path.name.casefold())
+        match = re.match(r'^(\d{4})(?:\D|$)', first(tags, 'date'))
+        year = match.group(1) if match else 'Unknown Year'
+        raw = first(tags, 'language').lower()
+        language = LANGUAGES.get(raw, raw or 'Unknown')
+        language = re.sub(r'[\\/:*?"<>|\r\n]', '_', language)[:60]
+        return identity, year, language
+
+    def configured_ids():
+        ids = []
+        for line in Path('/config/playlist.txt').read_text(encoding='utf-8-sig').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            parsed = urlsplit(line)
+            playlist_id = parsed.path.rstrip('/').split('/')[-1]
+            if (parsed.scheme != 'https' or parsed.hostname != 'open.spotify.com'
+                or not parsed.path.startswith('/playlist/')
+                or not re.fullmatch(r'[A-Za-z0-9]+', playlist_id)):
+                raise ValueError(f'Invalid playlist URL: {line}')
+            ids.append(playlist_id)
+        if not ids:
+            raise ValueError('No main playlists configured')
+        return list(dict.fromkeys(ids))
+
+    def read_playlist(playlist_id):
+        source = STAGING / f'{playlist_id}.m3u8'
+        tracks = []
+        for line in source.read_text(encoding='utf-8-sig').splitlines():
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            path = (ROOT / line).resolve()
+            if not path.is_relative_to((ROOT / playlist_id).resolve()):
+                raise ValueError(f'Unexpected playlist path: {line}')
+            if not path.is_file() or path.stat().st_size == 0:
+                raise ValueError(f'Missing or empty audio file: {path}')
+            tracks.append(path)
+        if not tracks:
+            raise ValueError(f'Empty playlist {playlist_id}; publication aborted')
+        return tracks
+
+    def write_playlist(path, tracks):
+        lines = ['#EXTM3U']
+        for track in tracks:
+            relative = os.path.relpath(track, ROOT)
+            if '\n' in relative or '\r' in relative:
+                raise ValueError(f'Invalid audio filename: {track}')
+            lines.append(relative)
+        path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+    def main():
+        ids = configured_ids()
+        cache = {}
+        def info(path):
+            if path not in cache:
+                cache[path] = metadata(path)
+            return cache[path]
+        main_playlists, active_ids = {}, set()
+        for playlist_id in ids:
+            tracks = read_playlist(playlist_id)
+            main_playlists[playlist_id] = tracks
+            active_ids.update(info(path)[0] for path in tracks)
+        groups, seen = defaultdict(list), set()
+        for playlist_id in ids:
+            folder = ROOT / playlist_id
+            if not folder.is_dir():
+                raise ValueError(f'Missing folder: {folder}')
+            for candidate in sorted(folder.rglob('*')):
+                if not candidate.is_file() or candidate.suffix.lower() not in EXTENSIONS:
+                    continue
+                path = candidate.resolve()
+                if not path.is_relative_to(ROOT):
+                    raise ValueError(f'Audio outside music root: {path}')
+                if path.stat().st_size == 0:
+                    raise ValueError(f'Empty audio file: {path}')
+                identity, year, language = info(path)
+                if identity in active_ids or identity in seen:
+                    continue
+                seen.add(identity)
+                groups[(year, language)].append(path)
+        publications, archive_names = [], set()
+        for playlist_id, tracks in main_playlists.items():
+            name = f'{playlist_id}.m3u8'
+            staged = STAGING / f'publish-{name}'
+            write_playlist(staged, tracks)
+            publications.append((staged, ROOT / name))
+        for (year, language), tracks in sorted(groups.items()):
+            name = f'Archive - {year} - {language}.m3u8'
+            staged = STAGING / f'publish-{name}'
+            write_playlist(staged, sorted(tracks))
+            publications.append((staged, ROOT / name))
+            archive_names.add(name)
+            print(f'{name}: {len(tracks)} songs')
+        for staged, destination in publications:
+            staged.replace(destination)
+        # Reserve this prefix for generated archive playlists only.
+        # Audio files are never deleted.
+        for old in ROOT.glob('Archive - *.m3u8'):
+            if old.name not in archive_names:
+                old.unlink()
+        print(f'Published {len(main_playlists)} main playlists; {len(seen)} archived songs.')
+
+    if __name__ == '__main__':
+        main()
