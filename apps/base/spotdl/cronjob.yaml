@@ -3,130 +3,80 @@ kind: CronJob
 metadata:
   name: spotdl-sync
 spec:
-  schedule: "0 9 * * *" # every day at 9am MYT
+  schedule: 0 9 * * *
   timeZone: Asia/Kuala_Lumpur
+  concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
-      activeDeadlineSeconds: 10800 # kill after 3 hours (prevents pile-up when rate-limited)
+      activeDeadlineSeconds: 10800
+      backoffLimit: 1
       template:
         spec:
-          # media-pvc is RWO Longhorn attached on hippo-lab — every pod that
-          # mounts it must land on the same node.
           affinity:
             nodeAffinity:
               requiredDuringSchedulingIgnoredDuringExecution:
                 nodeSelectorTerms:
-                  - matchExpressions:
-                      - key: kubernetes.io/hostname
-                        operator: In
-                        values:
-                          - hippo-lab
-
-          # Writes into the shared movietime media tree, so it must be 911
-          # (see CLAUDE.md) — do not copy the 1000 from apps elsewhere.
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - hippo-lab
           securityContext:
             runAsUser: 911
             runAsGroup: 911
             fsGroup: 911
-
           initContainers:
-            - name: init-dirs
-              image: busybox:1.38.0
-              command: ["sh", "-c", "mkdir -p /data/media/music"]
-              volumeMounts:
-                - name: data
-                  mountPath: /data
-            # yt-dlp needs a JS runtime to solve YouTube's signature/n
-            # challenges; without one every download fails ("Some YouTube
-            # downloads require Deno"). The spotdl image ships none, so copy
-            # the Deno binary into a shared dir that is on spotdl's PATH.
-            - name: deno
-              image: denoland/deno:2.9.7
-              command: ["sh", "-c", "cp \"$(command -v deno)\" /tools/deno"]
-              volumeMounts:
-                - name: tools
-                  mountPath: /tools
-
+          - name: init-dirs
+            image: busybox:1.38.0
+            command:
+            - sh
+            - -c
+            - mkdir -p /data/media/music
+            volumeMounts:
+            - &id001
+              name: data
+              mountPath: /data
+          - name: deno
+            image: denoland/deno:2.9.7
+            command:
+            - sh
+            - -c
+            - cp "$(command -v deno)" /tools/deno
+            volumeMounts:
+            - &id002
+              name: tools
+              mountPath: /tools
           containers:
-            - name: spotdl
-              # The v4.5.0 tag is broken (Alpine/musl image ships a glibc-linked
-              # tls-client lib -> "libresolv.so.2 not found"); fixed post-release,
-              # so pin nightly by digest. Move to the next stable tag when cut.
-              image: spotdl/spotify-downloader:nightly@sha256:29fb40019560c48ab8e26701b94e2b06eb3b19c380eccf798e66a217be78b91c
-              imagePullPolicy: IfNotPresent
-              env:
-                # UID 911 has no passwd entry in this image; spotdl needs a
-                # writable $HOME for its cache.
-                - name: HOME
-                  value: /tmp
-                - name: PATH
-                  value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-              # v4.5.0: no /app/.venv — the image entrypoint is `uv run ... spotdl`,
-              # replicated here so the playlist loop still works. Default audio
-              # provider (ytmusic via yt-dlp) replaces the dead `piped` fallback.
-              #
-              # `sync` (not `download`) mirrors each Spotify playlist: first run
-              # downloads everything and records the track list in a .spotdl
-              # save file; later runs re-fetch the playlist, download additions,
-              # and DELETE local files for removed tracks. spotdl refuses
-              # --save-file together with a .spotdl query, hence the if/else.
-              #
-              # Everything is relative to the music root (cd below) on purpose:
-              # the same output template is written into the .m3u8, so entries
-              # stay relative and resolve inside Navidrome too, which mounts
-              # this dir at /music and auto-imports the .m3u8 files as
-              # playlists (Spotify order preserved, updated on every scan).
-              # Per-playlist folders keep sync deletions from clobbering a
-              # song that another playlist still references.
-              #
-              # The newest yt-dlp from PyPI is installed into /tmp/ytdlp and put
-              # first on PYTHONPATH, shadowing the image's bundled copy. That one
-              # goes stale within months and YouTube then 403s every stream
-              # (2026.03.17 and 2026.07.04 both did by Oct 2026). `uv run --with`
-              # can't do this: it keeps the bundled copy since it already
-              # satisfies an unpinned requirement.
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  uv pip install --quiet --python /app/.venv/bin/python \
-                    --target /tmp/ytdlp "yt-dlp[default]"
-                  export PYTHONPATH=/tmp/ytdlp
-                  cd /data/media/music
-                  mkdir -p .spotdl
-                  fail=0
-                  while IFS= read -r url; do
-                    [ -z "$url" ] && continue
-                    id=$(basename "$url" | cut -d'?' -f1)
-                    save=".spotdl/$id.spotdl"
-                    if [ -f "$save" ]; then
-                      set -- sync "$save"
-                    else
-                      set -- --save-file "$save" sync "$url"
-                    fi
-                    uv run --project /app --no-dev --frozen --no-sync spotdl \
-                      --output "{list-name}/{artists} - {title}.{output-ext}" \
-                      --m3u "{list}.m3u8" \
-                      "$@" || { echo "sync failed for $url"; fail=1; }
-                  done < /config/playlist.txt
-                  exit $fail
-
-              volumeMounts:
-                - name: data
-                  mountPath: /data
-                - name: config
-                  mountPath: /config
-                - name: tools
-                  mountPath: /tools
-          restartPolicy: OnFailure
-          volumes:
-            - name: data
-              persistentVolumeClaim:
-                claimName: media-pvc
+          - name: spotdl
+            image: spotdl/spotify-downloader:nightly@sha256:29fb40019560c48ab8e26701b94e2b06eb3b19c380eccf798e66a217be78b91c
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: HOME
+              value: /tmp
+            - name: UV_CACHE_DIR
+              value: /tmp/uv-cache
+            - name: PYTHONUNBUFFERED
+              value: '1'
+            - name: PATH
+              value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            command:
+            - /bin/sh
+            - /config/run.sh
+            volumeMounts:
+            - *id001
             - name: config
-              configMap:
-                name: spotdl-playlists
-            - name: tools
-              emptyDir: {}
+              mountPath: /config
+              readOnly: true
+            - *id002
+          restartPolicy: Never
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: media-pvc
+          - name: config
+            configMap:
+              name: spotdl-playlists
+          - name: tools
+            emptyDir: {}
